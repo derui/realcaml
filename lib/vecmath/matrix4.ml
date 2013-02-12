@@ -243,3 +243,15 @@ let to_string mat =
     Printf.sprintf "| %f | %f | %f | %f |\n" mat.m21 mat.m22 mat.m23 mat.m24 ^
     Printf.sprintf "| %f | %f | %f | %f |\n" mat.m31 mat.m32 mat.m33 mat.m34 ^
     Printf.sprintf "| %f | %f | %f | %f |\n" mat.m41 mat.m42 mat.m43 mat.m44
+
+let upper3x3 mat =
+  { Matrix3.m11 = mat.m11; m12 = mat.m12; m13 = mat.m13;
+    m21 = mat.m21; m22 = mat.m22; m23 = mat.m23;
+    m31 = mat.m31; m32 = mat.m32; m33 = mat.m33;
+  }
+
+let replace_upper3x3 mat mat3 =
+  mat.m11 <- mat3.Matrix3.m11; mat.m12 <- mat3.Matrix3.m12; mat.m13 <- mat3.Matrix3.m13;
+  mat.m21 <- mat3.Matrix3.m21; mat.m22 <- mat3.Matrix3.m22; mat.m23 <- mat3.Matrix3.m23;
+  mat.m31 <- mat3.Matrix3.m31; mat.m32 <- mat3.Matrix3.m32; mat.m33 <- mat3.Matrix3.m33;
+  mat

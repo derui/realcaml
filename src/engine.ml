@@ -6,7 +6,7 @@ type t = {
   max_bodies:int;
   max_pairs:int;
 
-  (* manage rigid body informations and collision them *)
+  (* manage rigid body informations and collisions for them *)
   sweep_prune : SweepPrune.t;
 
   pair_count:int array;
@@ -23,6 +23,7 @@ let make ?(time_step=0.016) ?(contact_bias=0.1) ?(contact_stop=0.001)
    pair = Array.make_matrix 2 max_pairs Pair.empty;
   }
 
+(* rigid body同士の衝突判定を行う。 *)
 let intersect_bodies engine =
   let sp = engine.sweep_prune in
   let max_count = SweepPrune.get_max_count sp in
@@ -54,7 +55,7 @@ let sort_pair pair =
   Array.stable_sort comp pair;
   pair
 
-(* TODO: ブロードフェーズ *)
+(* do broad phase *)
 let broad_phase engine =
   let pair, swap, count = intersect_bodies engine in
   let pair = sort_pair pair in
@@ -82,7 +83,7 @@ let broad_phase engine =
   engine.pair_count.(swap) <- count;
   engine
 
-(* TODO: ナローフェーズ *)
+(* do narrow phase *)
 let narrow_phase engine = ()
 
 (* TODO: 拘束計算 *)

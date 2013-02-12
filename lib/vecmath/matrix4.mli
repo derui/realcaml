@@ -128,5 +128,11 @@ val inverse : t -> t option
 *)
 val transpose : t -> t
 
+(** Get upper matrix that is 3 rows and 3 columns in the matrix. *)
+val upper3x3: t -> Matrix3.t
+
+(** Replace upper matrix in the matrix from given 3x3 matrix.  *)
+val replace_upper3x3: t -> Matrix3.t -> t
+
 (** Convert matrix to string *)
 val to_string: t -> string
