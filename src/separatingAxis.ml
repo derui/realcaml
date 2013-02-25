@@ -7,6 +7,7 @@ module R = RigidBodyInfo
 type depth = float
 type separating_axis = Vecmath.Vector.t * depth
 
+(* TRANSLATE: ある軸上にメッシュを投影した場合の最大値と最小値を取得する *)
 let get_projection axis mesh =
   let vertices = Mesh.vertices mesh in
 
@@ -15,13 +16,14 @@ let get_projection axis mesh =
     (max pmax projected, min pmin projected)
   ) (min_float, max_float) vertices
 
+(* TRANSLATE: 姿勢と位置から、ワールド変換行列を作成する *)
 let world_transform orient vec =
   let open Vecmath in
   let orient = Quaternion.to_matrix orient
   and trans = Matrix4.translation vec in
   Matrix4.multiply trans orient
 
-(* Noneを返した時点で終了するfold_left *)
+(* TRANSLATE: Noneを返した時点で終了するArray.fold_left *)
 let breakable_fold ary f init =
   let length = Array.length ary in
   let rec loop index f prev =
@@ -32,17 +34,18 @@ let breakable_fold ary f init =
       | Some x -> loop (succ index) f x in
   loop 0 f init
 
-(* TODO: AとBの間に、sep_axisを分離軸として分離平面が存在するかどうかを調べる *)
+(* TRANSLATE: AとBの間に、sep_axisを分離軸として分離平面が存在するかどうかを調べる *)
 let is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_axis =
   match Matrix4.inverse world_b with
   | None -> None
   | Some inversed ->
+    (* TRANSLATE: Bのローカル座標系からAのローカル座標形への変換行列 *)
     let trans_a2b = Matrix4.multiply inversed world_a in
 
     let sep_axisb = Matrix4.mult_vec trans_a2b sep_axis in
     let offset_vec = Vector.sub (Matrix4.mult_vec world_a sep_axis)
       (Matrix4.mult_vec world_b sep_axisb) in
-    (* TODO: shape_bをAのローカル座標系に変換すると、演算負荷が高いため、
+    (* TRANSLATE: shape_bをAのローカル座標系に変換すると、演算負荷が高いため、
        分離軸をBのローカル座標として扱い、取得した値をAのローカル座標系に
        換算することで、演算負荷を抑えることができる。
     *)
@@ -69,7 +72,7 @@ let judge_intersect ~body_a ~body_b =
   let length_a = Array.length shapes_a
   and length_b = Array.length shapes_b in
 
-  (* TODO: 各面法線を分離軸として判定する *)
+  (* TRANSLATE: 各面法線を分離軸として判定する *)
   let face_intersect faces shape_a shape_b =
     let mesh_a = Shape.mesh shape_a
     and mesh_b = Shape.mesh shape_b in
@@ -81,7 +84,7 @@ let judge_intersect ~body_a ~body_b =
         if newdist < dist then Some (axis, dist) else Some (newaxis, newdist) in
     breakable_fold faces per_face (Vector.zero, min_float) in
 
-  (* TODO: 各エッジ同士の外積を分離軸として判定する。 *)
+  (* TRANSLATE: 各エッジ同士の外積を分離軸として判定する。 *)
   let edge_intersect shape_a shape_b =
     let mesh_a = Shape.mesh shape_a
     and mesh_b = Shape.mesh shape_b in
@@ -101,6 +104,7 @@ let judge_intersect ~body_a ~body_b =
         match is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_axis with
         | None -> None
         | Some (newaxis, newdist) ->
+          (* TRANSLATE: 貫通深度が最も浅い部分を取得する *)
           if newdist < dist then Some (axis, dist) else Some (newaxis, newdist)
       ) (axis, dist)
     ) (Vector.zero, min_float) in
@@ -113,7 +117,7 @@ let judge_intersect ~body_a ~body_b =
       let shape_a = shapes_a.(ind_a)
       and shape_b = shapes_b.(ind_b) in
 
-      (* TODO: Aの各面法線ベクトル、Bの各面法線ベクトル、各Edgeの外積を
+      (* TRANSLATE: Aの各面法線ベクトル、Bの各面法線ベクトル、各Edgeの外積を
          分離軸として判定する。どこかで分離平面が見付かれば、その時点で判定は終了する。
       *)
       face_intersect (Shape.mesh shape_a |> Mesh.facets) shape_a shape_b >>=

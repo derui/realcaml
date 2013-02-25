@@ -14,10 +14,10 @@ let intersect_one_axis ~pos_a ~len_a ~pos_b ~len_b =
 
 let intersect box_a box_b =
   let open Vecmath.Vector in
-  let x_sect = intersect_one_axis box_a.center.x box_b.half_size.x
+  let x_sect = intersect_one_axis box_a.center.x box_a.half_size.x
     box_b.center.x box_b.half_size.x
-  and y_sect = intersect_one_axis box_a.center.y box_b.half_size.y
+  and y_sect = intersect_one_axis box_a.center.y box_a.half_size.y
     box_b.center.y box_b.half_size.y
-  and z_sect = intersect_one_axis box_a.center.z box_b.half_size.z
+  and z_sect = intersect_one_axis box_a.center.z box_a.half_size.z
     box_b.center.z box_b.half_size.z in
   x_sect && y_sect && z_sect
