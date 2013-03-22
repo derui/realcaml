@@ -24,3 +24,13 @@ val remove : 'a array -> index:int -> init:'a -> 'a array
     @return new array added a given element.
 *)
 val add : 'a array -> 'a -> 'a array
+
+(** combine_map a b f traverse each element of arrays and apply function.
+    Sequence for applying function to elements of arrays is `f a1 b1', `f a1 b2`... and then
+    `f a2 b1', therefore, count what combine_omap apply function is multiply length of a to length of b,
+    is equal to 110 if length of a is 11 and length b is 10.
+
+    NOTE: combine_map is used to need to apply function all combination of elements of two arrays.
+    So you have to think amount of calculation when use this function.
+*)
+val combine_map: 'a array -> 'b array -> ('a -> 'b -> 'c) -> 'c array

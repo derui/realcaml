@@ -20,3 +20,6 @@ val offset_pos : t -> Vecmath.Vector.t
 
 (** Get offset orientation of given shape  *)
 val offset_orientation : t -> Vecmath.Quaternion.t
+
+(** Get offset transformation matrix of given shape  *)
+val offset_transform : t -> Vecmath.Matrix4.t

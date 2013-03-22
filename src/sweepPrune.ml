@@ -30,15 +30,21 @@ let intersect info ind_a ind_b =
       and b_pos = Collidable.center |< RBI.collidable b_inf
       and b_size = Collidable.half_size |< RBI.collidable b_inf in
       let open Vecmath.Vector in
-      (* TODO X軸から衝突をチェックしてみる *)
+      (* TRANSLATE: X軸から衝突をチェックしてみる *)
       if AABB.intersect_one_axis ~pos_a:a_pos.x ~len_a:a_size.x
         ~pos_b:b_pos.x ~len_b:b_size.x then
-      (* TODO X軸で交差していた場合、残り二軸についても衝突判定する。 *)
+      (* TRANSLATE: X軸で交差していた場合、残り二軸についても衝突判定する。 *)
         let iy = AABB.intersect_one_axis ~pos_a:a_pos.y ~len_a:a_size.y
           ~pos_b:b_pos.y ~len_b:b_size.y
         and iz = AABB.intersect_one_axis ~pos_a:a_pos.z ~len_a:a_size.z
           ~pos_b:b_pos.z ~len_b:b_size.z in
-      (* TODO 3軸全てが交差している場合は衝突していると判定する。 *)
+      (* TRANSLATE: 3軸全てが交差している場合は衝突していると判定する。 *)
         if iy && iz then Some (a_inf, b_inf) else None
       else
         None
+
+let get_body {infos;_} index =
+  if index < 0 || Array.length infos <= index then
+    None
+  else
+    infos.(index)

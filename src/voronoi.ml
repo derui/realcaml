@@ -14,7 +14,10 @@ type region_type =
 
 type t = region_type list
 
-
+(* TRANSLATE: Pointは最近接点が、いずれかの頂点。
+   Edgeは、最近接点が、いずれかのエッジ上に存在する。
+   Shapeは、平面上に最近接点が存在する。
+*)
 type recent_type = Point of V.t
                    | Edge of V.t * V.t
                    | Shape

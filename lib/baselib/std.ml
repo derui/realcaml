@@ -33,3 +33,5 @@ end
 
 (* Original Map module *)
 module Map = Ext_map
+
+module Float = Float

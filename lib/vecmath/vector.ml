@@ -38,3 +38,17 @@ let is_square v1 v2 =
     | _ -> false
 
 let invert v = scale ~v ~scale:(-1.0)
+
+(* Compare two vector.  *)
+let compare v1 v2 =
+  let module F = Baselib.Std.Float in
+  let c_x = F.compare v1.x v2.x
+  and c_y = F.compare v1.y v2.y
+  and c_z = F.compare v1.z v2.z in
+
+  if c_x = 0 then
+    if c_y = 0 then
+      if c_z = 0 then 0
+      else c_z
+    else c_y
+  else c_x

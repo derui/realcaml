@@ -134,5 +134,8 @@ val upper3x3: t -> Matrix3.t
 (** Replace upper matrix in the matrix from given 3x3 matrix.  *)
 val replace_upper3x3: t -> Matrix3.t -> t
 
+(** Get vector to translate of the matrix  *)
+val get_trans : t -> Vector.t
+
 (** Convert matrix to string *)
 val to_string: t -> string

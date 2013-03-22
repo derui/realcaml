@@ -27,3 +27,6 @@ val edges : t -> Mesh_edge.t array
 
 (** Get facets consists of mesh  *)
 val facets: t -> Mesh_facet.t array
+
+(** Return new mesh is transformed by given transformation matrix. *)
+val transform_vertices: t -> Vecmath.Matrix4.t -> t

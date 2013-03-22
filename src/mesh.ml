@@ -4,6 +4,7 @@ module Facet = Mesh_facet
 open Baselib.Std.Prelude
 
 module V = Vecmath.Vector
+module MT = Vecmath.Matrix4
 
 module M = Baselib.Std.Map.Make(struct
   type t = int * int
@@ -12,8 +13,6 @@ module M = Baselib.Std.Map.Make(struct
       Pervasives.compare ab bb
     else Pervasives.compare aa ba
 end)
-
-
 let max_vertices = 34
 let max_edges = 96
 let max_facets = 64
@@ -33,7 +32,7 @@ type edge_buffer = {vertices:int list;
                     mutable faces:int list;
                    }
 
-(* TODO 渡されたエッジが成す平面が、縮退面であるかどうかを判別する *)
+(* TRANSLATE: 渡されたエッジが成す平面が、縮退面であるかどうかを判別する *)
 let is_degenerate vertices ((aa, ab), (ba, bb), (ca, cb)) =
   let edge_a = V.sub vertices.(ab) vertices.(aa)
   and edge_b = V.sub vertices.(bb) vertices.(ba)
@@ -113,3 +112,8 @@ let convert ~vertices ~faces =
       Facet.make ~vertex_ids:(va, vb, vc) ~edge_ids:(ea, eb, ec) ~normal
   ) faces in
   {mesh_vertices = vertices; mesh_edges = edge_buf; mesh_facets = faces;}
+
+
+let transform_vertices mesh mat =
+  let new_vertices = Array.map (fun vec -> MT.mult_vec ~mat ~vec) mesh.mesh_vertices in
+  {mesh with mesh_vertices = new_vertices}

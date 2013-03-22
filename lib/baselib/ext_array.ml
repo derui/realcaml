@@ -1,3 +1,5 @@
+open Prelude
+
 
 let remove origin ~index ~init =
   let new_array = Array.make (Array.length origin) init in
@@ -9,3 +11,11 @@ let remove origin ~index ~init =
   new_array
 
 let add origin element = Array.append origin [|element|]
+
+let combine_map aa ba f =
+  Array.map (fun ea ->
+        Array.map (fun eb ->
+          f ea eb
+        ) ba
+      ) aa
+  |> Array.to_list |> Array.concat

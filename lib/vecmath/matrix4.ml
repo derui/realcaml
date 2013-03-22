@@ -255,3 +255,6 @@ let replace_upper3x3 mat mat3 =
   mat.m21 <- mat3.Matrix3.m21; mat.m22 <- mat3.Matrix3.m22; mat.m23 <- mat3.Matrix3.m23;
   mat.m31 <- mat3.Matrix3.m31; mat.m32 <- mat3.Matrix3.m32; mat.m33 <- mat3.Matrix3.m33;
   mat
+
+let get_trans mat =
+  {Vector.x = mat.m41; y = mat.m42; z = mat.m43;}

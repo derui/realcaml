@@ -59,3 +59,5 @@ val is_square : t -> t -> bool
 
 (** Get direction inverted vector. *)
 val invert: t -> t
+
+include Baselib.Std.Comparable.Type with type t := t

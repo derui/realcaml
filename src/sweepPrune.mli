@@ -23,3 +23,7 @@ val get_max_count: t -> int
     then them order is first - second that ordering are in arguments.
 *)
 val intersect: t -> int -> int -> (RigidBodyInfo.t * RigidBodyInfo.t) option
+
+(** Get RigidBodyInfo at given index in the SweepPrune.
+*)
+val get_body : t -> int -> RigidBodyInfo.t option
