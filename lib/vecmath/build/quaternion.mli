@@ -58,6 +58,11 @@ val angle : t -> float
 *)
 val to_matrix : t -> Matrix4.t
 
+(** Utility function to rotate vector without conversion quaternion to matrix.
+    This function equalient that apply `to_matrix` then `mult_vec`
+*)
+val rotate : t -> Vector.t -> Vector.t
+
 (** construct `obversing quaternion` between from and
     by obversing frequency.
     freq is only applied with between 0.0 and 1.0.

@@ -27,5 +27,8 @@ val collidable: t -> Collidable.t
 (** Get state of a rigid boyd in a rigid body information  *)
 val state: t -> State.t
 
+(** Get new ribid body information updated by new State.t  *)
+val set_state:t -> State.t -> t
+
 (** Get transformation matrix to world coodinates *)
 val get_world_transform: t -> Vecmath.Matrix4.t

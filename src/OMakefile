@@ -55,7 +55,7 @@ if $(not $(OCAMLFIND_EXISTS))
 #
 # Include path
 #
-OCAMLINCLUDES += ../lib/baselib ../lib/vecmath
+OCAMLINCLUDES += ../lib/baselib/build/ ../lib/vecmath/build/
 
 #
 # Compile native or byte code?
@@ -87,4 +87,4 @@ LIB = camelback
 #
 MyOCamlPackage($(LIB), $(FILES), $(EMPTY), -linkall, true)
 
-.DEFAULT: $(OCamlPackageTargetFiles $(LIB), false)
+.DEFAULT: $(OCamlPackageGeneratedFiles $(LIB), false)

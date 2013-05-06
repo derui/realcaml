@@ -89,6 +89,10 @@ let to_matrix quat =
     M.m41 = 0.0; M.m42 = 0.0; M.m43 = 0.0; M.m44 = 1.0;
   }
 
+let rotate q vec =
+  let mat = to_matrix q in
+  M.mult_vec mat vec
+
 (* construct dot product from q1 and q2. *)
 let dot q1 q2 =
   let w = q1.quat_angle *. q2.quat_angle

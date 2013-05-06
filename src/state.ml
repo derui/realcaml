@@ -1,4 +1,4 @@
-type motion = Actice | Static
+type motion = Active | Static
 
 type t = {
   pos:Vecmath.Vector.t;

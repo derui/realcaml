@@ -57,7 +57,7 @@ OCAMLPACKS[] =
 #
 # Include path
 #
-OCAMLINCLUDES += ../lib/baselib ../lib/vecmath ../src
+OCAMLINCLUDES += ../lib/baselib/build ../lib/vecmath/build ../src
 
 #
 # Compile native or byte code?
@@ -67,7 +67,7 @@ OCAMLINCLUDES += ../lib/baselib ../lib/vecmath ../src
 NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
 BYTE_ENABLED = true
 
-OCAML_LIBS += ../lib/baselib/baselib ../lib/vecmath/vecmath ../src/camelback
+OCAML_LIBS += ../lib/baselib/build/baselib ../lib/vecmath/build/vecmath ../src/camelback
 #
 # Various options
 #

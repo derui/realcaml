@@ -41,6 +41,15 @@ let identity () =
     m21 = 0.0; m22 = 1.0; m23 = 0.0;
     m31 = 0.0; m32 = 0.0; m33 = 1.0;
   }
+;;
+
+let ratio m r =
+  {
+    m11 = m.m11 *. r; m12 = m.m12 *. r; m13 = m.m13 *. r;
+    m21 = m.m21 *. r; m22 = m.m22 *. r; m23 = m.m23 *. r;
+    m31 = m.m31 *. r; m32 = m.m32 *. r; m33 = m.m33 *. r;
+  }
+;;
 
 let multiply ~m1 ~m2 =
   {
@@ -53,6 +62,13 @@ let multiply ~m1 ~m2 =
     m31 = m1.m31 *. m2.m11 +. m1.m32 *. m2.m21 +. m1.m33 *. m2.m31;
     m32 = m1.m31 *. m2.m12 +. m1.m32 *. m2.m22 +. m1.m33 *. m2.m32;
     m33 = m1.m31 *. m2.m13 +. m1.m32 *. m2.m23 +. m1.m33 *. m2.m33;
+  }
+
+let subtract mat1 mat2 =
+  {
+    m11 = mat1.m11 -. mat2.m11; m12 = mat1.m12 -. mat2.m12; m13 = mat1.m13 -. mat2.m13;
+    m21 = mat1.m21 -. mat2.m21; m22 = mat1.m22 -. mat2.m22; m23 = mat1.m23 -. mat2.m23;
+    m31 = mat1.m31 -. mat2.m31; m32 = mat1.m32 -. mat2.m32; m33 = mat1.m33 -. mat2.m33;
   }
 
 let mult_vec ~mat ~vec =

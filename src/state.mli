@@ -5,7 +5,7 @@
    @author derui
 *)
 
-type motion = Actice | Static
+type motion = Active | Static
 
 (** Types including some statements of rigid body. *)
 type t

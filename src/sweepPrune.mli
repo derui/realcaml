@@ -27,3 +27,6 @@ val intersect: t -> int -> int -> (RigidBodyInfo.t * RigidBodyInfo.t) option
 (** Get RigidBodyInfo at given index in the SweepPrune.
 *)
 val get_body : t -> int -> RigidBodyInfo.t option
+
+(** Set RigidBodyInfo at given index in the SeepPlune *)
+val set_body : t -> int -> RigidBodyInfo.t -> t

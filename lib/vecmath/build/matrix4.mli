@@ -113,6 +113,9 @@ val scaling : Vector.t -> t
 (** multiply given vector with given matrix. *)
 val mult_vec: mat:t -> vec:Vector.t -> Vector.t
 
+(** Subtract first matrix to second matrix.  *)
+val subtract: t -> t -> t
+
 (** construct inverse matrix.
     inverse matrix is usually used to unprojection matrix that
     translate position translated by projection matrix to  world
@@ -136,6 +139,9 @@ val replace_upper3x3: t -> Matrix3.t -> t
 
 (** Get vector to translate of the matrix  *)
 val get_trans : t -> Vector.t
+
+(** Get inversed matrix to force inversing it. *)
+val force_inverse : t -> t
 
 (** Convert matrix to string *)
 val to_string: t -> string

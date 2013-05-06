@@ -27,4 +27,4 @@
 
 .SUBDIRS: baselib vecmath
 
-.DEFAULT: baselib/baselib.cmxa vecmath/vecmath.cmxa
+.DEFAULT: baselib/build/baselib.cmxa vecmath/build/vecmath.cmxa

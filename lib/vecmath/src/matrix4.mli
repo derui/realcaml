@@ -1,5 +1,5 @@
 (**
-   this module provide matrix type and operations for 3x3 matrix.
+   this module provide matrix type and operations for OpenGL.
    3D coordinates style of OpenGL is 'right-handed coordinates
    system'.
    Therefore, matrix operation conjections needs to apply for 'right
@@ -9,9 +9,10 @@
 
    vector multiplying by matrix as below.
 
-   | 11 | 12 | 13 || x |
-   | 21 | 22 | 23 || y |
-   | 31 | 32 | 33 || z |
+   | 11 | 12 | 13 | 14 || x |
+   | 21 | 22 | 23 | 24 || y |
+   | 31 | 32 | 33 | 34 || z |
+   | 41 | 42 | 43 | 44 || w |
 
    type of matrix providing this module is able to convert between
    array and it. User wouldn't careful inner implementation!
@@ -19,24 +20,23 @@
 
    Matrix provided this module is able to convert to string, converted
    string format as row major order is as follows.
-   | 11 | 12 | 13 |
-   | 21 | 22 | 23 |
-   | 31 | 32 | 33 |
+   | 11 | 12 | 13 | 14 |
+   | 21 | 22 | 23 | 24 |
+   | 31 | 32 | 33 | 34 |
+   | 41 | 42 | 43 | 44 |
    Therefore, sorry to above format can not change from user...
-
-   3x3 orthoganal matrix do not use as translated transformation matrix, then
-   you use 4x4 matrix need translated transformation matrix.
 *)
 
-(** precise 3x3 matrix definition.
+(** precise 4x4 matrix definition.
     all attributes are mutable but not usually use this.
     The first number of each elements is row, and the second number of they is
     column.
 *)
 type t = {
-  mutable m11 : float; mutable m12 : float; mutable m13 : float;
-  mutable m21 : float; mutable m22 : float; mutable m23 : float;
-  mutable m31 : float; mutable m32 : float; mutable m33 : float;
+  mutable m11 : float; mutable m12 : float; mutable m13 : float; mutable m14 : float;
+  mutable m21 : float; mutable m22 : float; mutable m23 : float; mutable m24 : float;
+  mutable m31 : float; mutable m32 : float; mutable m33 : float; mutable m34 : float;
+  mutable m41 : float; mutable m42 : float; mutable m43 : float; mutable m44 : float;
 }
 
 (** Type of conversion when matrix applies to convert to array.
@@ -59,6 +59,33 @@ val to_array : ?order:conversion_order -> t -> float array
 *)
 val identity : unit -> t
 
+(**
+   construct a projection matrix for `ortho projection'.
+   given parameters of near and far are mostly equivalant of
+   perspective_projection arguments.
+   Left and right specifies the coordinates for the left and right vertical clipping planes.
+   Bottom and top specifies the coodinates for the left and right horizontal clipping planes.
+*)
+val ortho_projection : left:float -> right:float ->
+  top:float -> bottom:float -> near:float -> far:float -> t
+
+(**
+   construct a projection matrix.
+   `fov' is that the field of view angle in the y direction.
+   `ratio` is screen ratio that determines the field of view in the x direction.
+   near and far is clip that visible range along the Z axis.
+
+   @param fov Field Of View
+   @param the ratio of x to y
+   @param near near clip
+   @param far far clip
+*)
+val perspective_projection :
+  fov:float ->
+  ratio:float ->
+  near:float ->
+  far:float -> t
+
 (** multiply two matrices.
     To multiply direction is m1 to m2 that is equal to [m1][m2].
 
@@ -75,6 +102,9 @@ val multiply : m1:t -> m2:t -> t
 *)
 val rotation_matrix_of_axis : dir:Vector.t -> angle:float -> t
 
+(** create a translation matrix defined a vector is length of moving.  *)
+val translation : Vector.t -> t
+
 (** create a scaling matrix defined a vector that each values are
     what scaling is along the axis.
 *)
@@ -82,6 +112,9 @@ val scaling : Vector.t -> t
 
 (** multiply given vector with given matrix. *)
 val mult_vec: mat:t -> vec:Vector.t -> Vector.t
+
+(** Subtract first matrix to second matrix.  *)
+val subtract: t -> t -> t
 
 (** construct inverse matrix.
     inverse matrix is usually used to unprojection matrix that
@@ -98,5 +131,17 @@ val inverse : t -> t option
 *)
 val transpose : t -> t
 
-(** Convert matrix to string  *)
+(** Get upper matrix that is 3 rows and 3 columns in the matrix. *)
+val upper3x3: t -> Matrix3.t
+
+(** Replace upper matrix in the matrix from given 3x3 matrix.  *)
+val replace_upper3x3: t -> Matrix3.t -> t
+
+(** Get vector to translate of the matrix  *)
+val get_trans : t -> Vector.t
+
+(** Get inversed matrix to force inversing it. *)
+val force_inverse : t -> t
+
+(** Convert matrix to string *)
 val to_string: t -> string

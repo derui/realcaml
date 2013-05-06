@@ -1,4 +1,5 @@
 module V = Vector
+open Baselib.Std.Prelude
 
 (* precise 4x4 matrix definition. *)
 type t = {
@@ -104,6 +105,14 @@ let multiply ~m1 ~m2 =
     m42 = m1.m41 *. m2.m12 +. m1.m42 *. m2.m22 +. m1.m43 *. m2.m32 +. m1.m44 *. m2.m42;
     m43 = m1.m41 *. m2.m13 +. m1.m42 *. m2.m23 +. m1.m43 *. m2.m33 +. m1.m44 *. m2.m43;
     m44 = m1.m41 *. m2.m14 +. m1.m42 *. m2.m24 +. m1.m43 *. m2.m34 +. m1.m44 *. m2.m44;
+  }
+
+let subtract mat1 mat2 =
+  {
+    m11 = mat1.m11 -. mat2.m11; m12 = mat1.m12 -. mat2.m12; m13 = mat1.m13 -. mat2.m13; m14 = mat1.m14 -. mat2.m14;
+    m21 = mat1.m21 -. mat2.m21; m22 = mat1.m22 -. mat2.m22; m23 = mat1.m23 -. mat2.m23; m24 = mat1.m24 -. mat2.m24;
+    m31 = mat1.m31 -. mat2.m31; m32 = mat1.m32 -. mat2.m32; m33 = mat1.m33 -. mat2.m33; m34 = mat1.m34 -. mat2.m34;
+    m41 = mat1.m41 -. mat2.m41; m42 = mat1.m42 -. mat2.m42; m43 = mat1.m43 -. mat2.m43; m44 = mat1.m44 -. mat2.m44;
   }
 
 let mult_vec ~mat ~vec =
@@ -258,3 +267,10 @@ let replace_upper3x3 mat mat3 =
 
 let get_trans mat =
   {Vector.x = mat.m41; y = mat.m42; z = mat.m43;}
+
+let force_inverse mat =
+  let upper = Matrix3.transpose |< upper3x3 mat in
+  let translate = V.invert |< get_trans mat in
+  let replaced = replace_upper3x3 mat upper in
+  let open V in
+  {replaced with m14 = translate.x; m24 = translate.y; m34 = translate.z}

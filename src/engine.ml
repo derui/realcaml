@@ -1,15 +1,11 @@
 open Baselib.Std.Prelude
 
 type t = {
-  time_step:float;
-  contact_bias:float;
-  contact_stop:float;
-  iteration:int;
-  max_bodies:int;
-  max_pairs:int;
+  engine_option : Engine_option.engine_option;
 
   (* manage rigid body informations and collisions for them *)
   sweep_prune : SweepPrune.t;
+  solver_bodies: ConstraintSolver.SolverBody.t array;
 
   pair_count:int array;
   mutable pair_swap:int;
@@ -24,8 +20,11 @@ type pair_update_type = Remove | Update of (Vecmath.Vector.t * float) | New of (
 
 let make ?(time_step=0.016) ?(contact_bias=0.1) ?(contact_stop=0.001)
     ?(iteration=10) ?(max_bodies=500) ?(max_pairs=5000) () =
-  {time_step; contact_bias; contact_stop; iteration; max_bodies; max_pairs;
+  {engine_option = {Engine_option.time_step;
+                    contact_bias; contact_stop; iteration; max_bodies; max_pairs;
+                   };
    sweep_prune = SweepPrune.make max_bodies;
+   solver_bodies = Array.make max_bodies ConstraintSolver.SolverBody.empty;
    pair_swap = 0;
    pair_count = [|0; 0|];
    pair = Array.make_matrix 2 max_pairs Pair.empty;
@@ -309,6 +308,55 @@ let narrow_phase engine =
   engine
 
 (* do solve constarints *)
-let solve_constraints engine = ()
+let solve_constraints engine =
+  (* TRANSLATE 各Rigid Bodyについて、SolverBodyをセットアップする *)
+  let current_pair = engine.pair.(engine.pair_swap)
+  and bodies = engine.sweep_prune
+  and solver_bodies = engine.solver_bodies in
+  let get_body ind = SweepPrune.get_body bodies ind in
+  let solver_bodies = Array.map ConstraintSolver.setup_solver_body bodies in
+  let sovler_set ind = (get_body (Int32.to_int ind), solver_bodies.(Int32.to_int ind)) in
+  let update_contact pair =
+    let new_contact = ConstraintSolver.setup_constraint (Pair.indexOfA pair |> solver_set)
+      (Pair.indexOfB pair |> solver_set)
+      (Pair.contact pair) (Pair.pair_type pair) engine.engine_option in
+    Pair.update_contact pair new_contact in
 
+  let do_solve pair =
+    let ((bodyA, solverA), (bodyB, solverB)) =
+      ConstraintSolver.solve (Pair.indexOfA pair |> solver_set)
+      (Pair.indexOfB pair |> solver_set)
+      (Pair.contact pair) engine.engine_option in
+    let indA = Pair.indexOfA pair |> Int32.to_int
+    and indB = Pair.indexOfB pair |> Int32.to_int in
+    bodies.(indA) <- bodyA;
+    bodies.(indB) <- bodyB;
+    solver_bodies.(indA) <- solverA;
+    solver_bodies.(indB) <- solverB in
+
+  let update_velocity ind body =
+    let state = RI.state body in
+    let solver = solver_bodies.(ind) in
+    let module S = ConstraintSolver.SolverBody in
+    let linear = V.add (State.linear_velocity state) (S.delta_linear_velocity solver)
+    and angular = V.add (State.an_velocity state) (S.delta_angular_velocity solver) in
+    let state = State.make ~pos:(State.pos state) ~orient:(State.orientation state)
+      ~linear ~angular ~motion_type:(State.motion_type state) in
+    (ind, RI.set_state body state) in
+  
+  (* TRANSLATE 各pairについて、拘束のセットアップを行う *)
+  let current_pair = Array.map update_contact current_pair in
+  (* TRANSLATE 各pairについて、拘束力の演算を行う *)
+  Array.iter do_solve current_pair;
+  (* TRANSLATE 算出した拘束力を更新する *)
+  let updated_bodies = Array.mapi update_velocity bodies in
+  let bodies = Array.fold_left
+    (fun sp (ind, body) -> SweepPrune.set_body sp ind body) bodies update_bodies in
+
+  (* TRANSLATE 更新したSweepPluneを、engineに再度設定する *)
+  engine.pair.(engine.pair_swap) <- current_pair;
+  engine.sweep_prune <- bodies;
+  engine
+;;
+  
 let execute_pipeline engine = ()

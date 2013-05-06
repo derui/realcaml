@@ -15,6 +15,8 @@ let collidable {collidable;_} = collidable
 
 let state {state;_} = state
 
+let set_state rbi state = {rbi with state = state}
+
 let get_world_transform {state;_} =
   let pos = State.pos state
   and orientation = State.orientation state in
