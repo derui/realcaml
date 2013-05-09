@@ -17,6 +17,9 @@ let add prune info =
 
 let get_max_count {current_count;_} = current_count
 
+let get_bodies {infos;_} = infos
+let set_bodies sp infos = {sp with infos}
+
 let intersect info ind_a ind_b =
   let in_range i range = i > 0 && i < range in
   if not (in_range ind_a info.current_count) ||
@@ -42,9 +45,3 @@ let intersect info ind_a ind_b =
         if iy && iz then Some (a_inf, b_inf) else None
       else
         None
-
-let get_body {infos;_} index =
-  if index < 0 || Array.length infos <= index then
-    None
-  else
-    infos.(index)

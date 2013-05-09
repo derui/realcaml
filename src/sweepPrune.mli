@@ -24,9 +24,8 @@ val get_max_count: t -> int
 *)
 val intersect: t -> int -> int -> (RigidBodyInfo.t * RigidBodyInfo.t) option
 
-(** Get RigidBodyInfo at given index in the SweepPrune.
-*)
-val get_body : t -> int -> RigidBodyInfo.t option
+(** Get bodies of the SweepPrune  *)
+val get_bodies : t -> RigidBodyInfo.t option array
 
-(** Set RigidBodyInfo at given index in the SeepPlune *)
-val set_body : t -> int -> RigidBodyInfo.t -> t
+(** Set bodies for the SweepPrune  *)
+val set_bodies : t -> RigidBodyInfo.t option array -> t

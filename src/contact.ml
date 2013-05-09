@@ -14,3 +14,5 @@ let contact_num {contact_num;_} = contact_num
 let friction {friction;_} = friction
 
 let contact_points {contact_points;_} = contact_points
+
+let set_contact_points ct cps = {ct with contact_points = cps}

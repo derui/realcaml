@@ -23,3 +23,6 @@ val friction: t -> float
 
 (** Get contact points contained given contact information. *)
 val contact_points: t -> ContactPoint.t array
+
+(** Set new contact points to the Contact and return new Contact *)
+val set_contact_points: t -> ContactPoint.t array -> t

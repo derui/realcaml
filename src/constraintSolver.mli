@@ -42,9 +42,12 @@ val setup_solver_body : RigidBodyInfo.t -> SolverBody.t
 type solver_info = RigidBodyInfo.t * SolverBody.t
 
 (** Setup constraints in contact point for between given solver_info   *)
-val setup_constraint : solver_info -> solver_info -> ContactPoint.t -> Pair.pair ->
-  Engine_option.engine_option -> ContactPoint.t
+val setup_constraint : solver_info -> solver_info -> Contact.t -> Pair.pair ->
+  Engine_option.engine_option -> Contact.t
 
 (** Solve constraint power with solver body *)
 val solve : solver_info -> solver_info -> Contact.t -> Engine_option.engine_option ->
   solver_info * solver_info
+
+(** return new Contact that is updated to be updating constraints of given Contact  *)
+val update_constraint : Contact.t -> Contact.t
