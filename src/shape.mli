@@ -7,19 +7,11 @@
 *)
 
 (** type of shape  *)
-type t
-
-(** Make initialized shape by given parameters  *)
-val make : mesh:Mesh.t -> pos:Vecmath.Vector.t -> orient:Vecmath.Quaternion.t -> t
-
-(** Get real mesh of the shape.  *)
-val mesh: t -> Mesh.t
-
-(** Get offset position of given shape  *)
-val offset_pos : t -> Vecmath.Vector.t
-
-(** Get offset orientation of given shape  *)
-val offset_orientation : t -> Vecmath.Quaternion.t
+type t = {
+  mesh:Mesh.t;
+  offset_pos:Vecmath.Vector.t;
+  offset_orientation:Vecmath.Quaternion.t;
+}
 
 (** Get offset transformation matrix of given shape  *)
 val offset_transform : t -> Vecmath.Matrix4.t

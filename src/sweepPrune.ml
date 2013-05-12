@@ -3,7 +3,7 @@ module RBI = RigidBodyInfo
 
 type t = {
   infos:RBI.t option array;
-  mutable current_count: int;
+  current_count: int;
 }
 
 let make count =
@@ -12,14 +12,8 @@ let make count =
 let add prune info =
   let current = prune.current_count in
   prune.infos.(current) <- Some info;
-  prune.current_count <- succ current;
-  prune
-
-let get_max_count {current_count;_} = current_count
-
-let get_bodies {infos;_} = infos
-let set_bodies sp infos = {sp with infos}
-
+  {prune with current_count = succ current}
+  
 let intersect info ind_a ind_b =
   let in_range i range = i > 0 && i < range in
   if not (in_range ind_a info.current_count) ||
@@ -28,10 +22,10 @@ let intersect info ind_a ind_b =
     match (info.infos.(ind_a), info.infos.(ind_b)) with
     | (None, _) | (_, None) -> None
     | (Some a_inf, Some b_inf) ->
-      let a_pos = Collidable.center |< RBI.collidable a_inf
-      and a_size = Collidable.half_size |< RBI.collidable a_inf
-      and b_pos = Collidable.center |< RBI.collidable b_inf
-      and b_size = Collidable.half_size |< RBI.collidable b_inf in
+      let a_pos = a_inf.RBI.collidable.Collidable.center
+      and a_size = a_inf.RBI.collidable.Collidable.half_size
+      and b_pos = b_inf.RBI.collidable.Collidable.center
+      and b_size = b_inf.RBI.collidable.Collidable.half_size in
       let open Vecmath.Vector in
       (* TRANSLATE: X軸から衝突をチェックしてみる *)
       if AABB.intersect_one_axis ~pos_a:a_pos.x ~len_a:a_size.x

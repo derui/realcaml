@@ -4,15 +4,4 @@ type t = {
   contact_points:ContactPoint.t array;
 }
 
-let make ~num ~friction ~points =
-  {contact_num = num; friction; contact_points = points}
-
 let empty = {contact_num = 0; friction = 0.0; contact_points = [||]}
-
-let contact_num {contact_num;_} = contact_num
-
-let friction {friction;_} = friction
-
-let contact_points {contact_points;_} = contact_points
-
-let set_contact_points ct cps = {ct with contact_points = cps}

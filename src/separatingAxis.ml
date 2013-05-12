@@ -14,7 +14,7 @@ type separating_axis = separating_type * Vecmath.Vector.t * depth
 
 (* TRANSLATE: ある軸上にメッシュを投影した場合の最大値と最小値を取得する *)
 let get_projection axis mesh =
-  let vertices = Mesh.vertices mesh in
+  let vertices = mesh.Mesh.vertices in
 
   Array.fold_left (fun (pmax, pmin) elem ->
     let projected = Vecmath.Vector.dot elem axis in
@@ -60,22 +60,22 @@ let is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_ax
 
 let judge_intersect ~body_a ~body_b =
   let open Vecmath in
-  let state_a = R.state body_a
-  and state_b = R.state body_b in
-  let world_a = Util.world_transform (State.orientation state_a) (State.pos state_a)
-  and world_b = Util.world_transform (State.orientation state_b) (State.pos state_b) in
+  let state_a = body_a.R.state 
+  and state_b = body_b.R.state in
+  let world_a = Util.world_transform state_a.State.orientation state_a.State.pos 
+  and world_b = Util.world_transform state_b.State.orientation state_a.State.pos in
 
-  let shapes_a = R.collidable body_a |> Collidable.shapes
-  and shapes_b = R.collidable body_b |> Collidable.shapes in
+  let shapes_a = body_a.R.collidable.Collidable.shapes
+  and shapes_b = body_b.R.collidable.Collidable.shapes in
   let length_a = Array.length shapes_a
   and length_b = Array.length shapes_b in
 
   (* TRANSLATE: 各面法線を分離軸として判定する *)
   let face_intersect faces shape_a shape_b (styp, axis, dist) septype =
-    let mesh_a = Shape.mesh shape_a
-    and mesh_b = Shape.mesh shape_b in
+    let mesh_a = shape_a.Shape.mesh 
+    and mesh_b = shape_b.Shape.mesh in
     let per_face (styp, axis, dist) face =
-      let sep_axis = Mesh_facet.normal face in
+      let sep_axis = face.Mesh.Facet.normal in
       match is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_axis with
       | None -> None
       | Some (newaxis, newdist) ->
@@ -84,14 +84,14 @@ let judge_intersect ~body_a ~body_b =
 
   (* TRANSLATE: 各エッジ同士の外積を分離軸として判定する。 *)
   let edge_intersect shape_a shape_b (styp, axis, dist) =
-    let mesh_a = Shape.mesh shape_a
-    and mesh_b = Shape.mesh shape_b in
-    let vertices_a = Mesh.vertices mesh_a
-    and vertices_b = Mesh.vertices mesh_b
-    and edges_a = Mesh.edges mesh_a
-    and edges_b = Mesh.edges mesh_b in
+    let mesh_a = shape_a.Shape.mesh 
+    and mesh_b = shape_b.Shape.mesh in
+    let vertices_a = mesh_a.Mesh.vertices
+    and vertices_b = mesh_b.Mesh.vertices 
+    and edges_a = mesh_a.Mesh.edges
+    and edges_b = mesh_b.Mesh.edges in
     let edge_to_vec edge vertices =
-      let first, second = Mesh_edge.vertex_ids edge in
+      let first, second = edge.Mesh.Edge.vertex_ids in
       Vector.sub vertices.(second) vertices.(first) in
 
     breakable_fold edges_a (fun (styp, axis, dist) edge ->
@@ -118,9 +118,9 @@ let judge_intersect ~body_a ~body_b =
       (* TRANSLATE: Aの各面法線ベクトル、Bの各面法線ベクトル、各Edgeの外積を
          分離軸として判定する。どこかで分離平面が見付かれば、その時点で判定は終了する。
       *)
-      face_intersect (Shape.mesh shape_a |> Mesh.facets) shape_a shape_b
+      face_intersect shape_a.Shape.mesh.Mesh.facets shape_a shape_b
         (APlane, Vector.zero, 0.0) APlane >>=
         (fun sep_axis ->
-          face_intersect (Shape.mesh shape_b |> Mesh.facets) shape_a shape_b sep_axis BPlane) >>=
+          face_intersect shape_b.Shape.mesh.Mesh.facets shape_a shape_b sep_axis BPlane) >>=
         (fun sep_axis -> edge_intersect shape_a shape_b sep_axis) in
   intersect_loop 0 0

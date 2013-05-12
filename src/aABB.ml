@@ -1,7 +1,8 @@
 (** A `AABB` type.  *)
-type t = {center:Vecmath.Vector.t; half_size: Vecmath.Vector.t}
-
-let make ~center ~half_size = {center;half_size}
+type t = {
+  center:Vecmath.Vector.t;
+  half_size: Vecmath.Vector.t
+}
 
 let intersect_one_axis ~pos_a ~len_a ~pos_b ~len_b =
   let a_min = pos_a -. len_a

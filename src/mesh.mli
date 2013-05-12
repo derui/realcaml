@@ -5,28 +5,39 @@
    @author derui
 *)
 
-type t
+
+module Edge : sig
+  type edge_type = Convex | Concave | Flat
+
+  (** A type of Edge  *)
+  type t = {
+    edge_type:edge_type;
+    vertex_ids:int * int;
+    face_ids: int list;
+  }
+end
+
+module Facet : sig
+  type t = {
+    vertex_ids:int * int * int;
+    edge_ids: int * int * int;
+    normal:Vecmath.Vector.t;
+  }
+
+end
+
 (** type of convex mesh  *)
-
-val max_vertices: int
-val max_edges: int
-val max_facets: int
-(** Constants for convex mesh. These are limitation of Mesh made from this module.  *)
-
+type t = {
+  edges: Edge.t array;
+  vertices: Vecmath.Vector.t array;
+  facets:Facet.t array;
+}
+  
 (** Convert vertices and vertex indexed faces. Given original data must necessary
     convex mesh, and a front face of given faces is counter-clockwise which vertices consisted of
     face is.
 *)
 val convert: vertices:Vecmath.Vector.t array -> faces:(int * int * int) array -> t
-
-(** Get vertices consisted of mesh.  *)
-val vertices: t -> Vecmath.Vector.t array
-
-(** Get edges consists of mesh  *)
-val edges : t -> Mesh_edge.t array
-
-(** Get facets consists of mesh  *)
-val facets: t -> Mesh_facet.t array
 
 (** Return new mesh is transformed by given transformation matrix. *)
 val transform_vertices: t -> Vecmath.Matrix4.t -> t

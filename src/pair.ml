@@ -3,9 +3,9 @@ open Baselib.Std.Prelude
 type pair = New | Keep
 
 type t = {
-  mutable pair_type:pair;
+  pair_type:pair;
   key:int64;
-  mutable contact:Contact.t;
+  contact:Contact.t;
   indexA:int32; indexB:int32;
 }
 
@@ -30,16 +30,3 @@ let empty = {
   pair_type = New; key = 0L;
   contact = Contact.empty ; indexA = 0l; indexB = 0l;}
 
-let pair_type {pair_type;_} = pair_type
-
-let key {key;_} = key
-
-let indexOfA {indexA;_} = indexA
-
-let indexOfB {indexB;_} = indexB
-
-let contact {contact;_} = contact
-
-let update_contact pair ct = pair.contact <- ct; pair
-
-let change_pair pair new_type = pair.pair_type <- new_type; pair;

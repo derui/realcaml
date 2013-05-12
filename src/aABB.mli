@@ -9,10 +9,10 @@
 *)
 
 (** A `AABB` type.  *)
-type t
-
-(** Make AABB with center position of it and half size along each axis. *)
-val make : center:Vecmath.Vector.t -> half_size:Vecmath.Vector.t -> t
+type t = {
+  center:Vecmath.Vector.t;
+  half_size: Vecmath.Vector.t
+}
 
 (** Check intersection each AABB.  *)
 val intersect: t -> t -> bool

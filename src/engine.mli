@@ -28,5 +28,5 @@ val make: ?time_step:float -> ?contact_bias:float -> ?contact_stop:float ->
     @param ?max_pairs [5000]
 *)
 
-val execute_pipeline : t -> unit
+val execute_pipeline : t -> t
 (** Run simulation pipeline by given engine. Executing result is effected to given engine. *)

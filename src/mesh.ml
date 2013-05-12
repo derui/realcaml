@@ -1,5 +1,22 @@
-module Edge = Mesh_edge
-module Facet = Mesh_facet
+module Edge = struct
+  type edge_type = Convex | Concave | Flat
+
+  (** A type of Edge  *)
+  type t = {
+    edge_type:edge_type;
+    vertex_ids:int * int;
+    face_ids: int list;
+  }
+end
+
+module Facet = struct
+  type t = {
+    vertex_ids:int * int * int;
+    edge_ids: int * int * int;
+    normal:Vecmath.Vector.t;
+  }
+
+end
 
 open Baselib.Std.Prelude
 
@@ -18,19 +35,16 @@ let max_edges = 96
 let max_facets = 64
 
 type t = {
-  mesh_edges: Edge.t array;
-  mesh_vertices: Vecmath.Vector.t array;
-  mesh_facets:Facet.t array;
+  edges: Edge.t array;
+  vertices: Vecmath.Vector.t array;
+  facets:Facet.t array;
 }
 
-let vertices {mesh_vertices;_} = mesh_vertices
-let edges {mesh_edges;_} = mesh_edges
-let facets {mesh_facets;_} = mesh_facets
-
 (* Temporary edge information to make mesh_edges *)
-type edge_buffer = {vertices:int list;
-                    mutable faces:int list;
-                   }
+type edge_buffer = {
+  vertex_indices:int list;
+  mutable faces:int list;
+}
 
 (* TRANSLATE: 渡されたエッジが成す平面が、縮退面であるかどうかを判別する *)
 let is_degenerate vertices ((aa, ab), (ba, bb), (ca, cb)) =
@@ -64,7 +78,7 @@ let convert_edges vertices faces =
       match (M.find buf edge, M.find buf swaped_edge) with
       | (None, None) ->
         let (indexa, indexb) = edge in
-        M.add buf ~key:edge ~data:{vertices = [indexa; indexb];
+        M.add buf ~key:edge ~data:{vertex_indices = [indexa; indexb];
                                    faces = [face_id];}
       | (Some e, _) | (_, Some e) ->
         Printf.printf "%d\n" face_id;
@@ -87,9 +101,9 @@ let convert ~vertices ~faces =
   (* TODO 作成したmapを、Edgeのリストとして作成する。この時点では、すべてのedgeを凸メッシュとして
      作成する。*)
   let edge_buf = Array.of_list |< M.fold edge_buf ~f:(fun ~key ~data l ->
-    Edge.make ~etype:Edge.Convex ~vertex_ids:(List.nth data.vertices 0, List.nth data.vertices 1)
-      ~face_ids:data.faces
-    :: l
+    {Edge.edge_type = Edge.Convex; vertex_ids = (List.nth data.vertex_indices 0, List.nth data.vertex_indices 1);
+     face_ids = data.faces
+    } :: l
   ) ~init:[] in
   (* TODO faceの配列を、Facetの配列として作成する。Edgeの配列はすでに用意されているので、
      配列の内部から、一致するindexを取得して利用する。
@@ -97,7 +111,7 @@ let convert ~vertices ~faces =
   let faces = Array.map (fun (va, vb, vc) ->
     let (ea, eb, ec) = edges_of_face (va, vb, vc) in
     let edge_detect (origin_a, origin_b) edge =
-      let (ea, eb) = Edge.vertex_ids edge in
+      let (ea, eb) = edge.Edge.vertex_ids in
       if origin_a = ea && origin_b = eb then true
       else if origin_a = eb && origin_b = ea then true
       else false in
@@ -109,11 +123,11 @@ let convert ~vertices ~faces =
     | (Some ea, Some eb, Some ec) ->
       let normal = V.normalize |< V.cross (V.sub vertices.(vb) vertices.(va))
         (V.sub vertices.(vc) vertices.(va)) in
-      Facet.make ~vertex_ids:(va, vb, vc) ~edge_ids:(ea, eb, ec) ~normal
+      {Facet.vertex_ids = (va, vb, vc); edge_ids = (ea, eb, ec);normal}
   ) faces in
-  {mesh_vertices = vertices; mesh_edges = edge_buf; mesh_facets = faces;}
+  {vertices = vertices; edges = edge_buf; facets = faces;}
 
 
 let transform_vertices mesh mat =
-  let new_vertices = Array.map (fun vec -> MT.mult_vec ~mat ~vec) mesh.mesh_vertices in
-  {mesh with mesh_vertices = new_vertices}
+  let new_vertices = Array.map (fun vec -> MT.mult_vec ~mat ~vec) mesh.vertices in
+  {mesh with vertices = new_vertices}

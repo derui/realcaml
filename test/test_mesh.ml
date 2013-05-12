@@ -16,13 +16,13 @@ let faces () = [|(0, 1, 2);
 
 let test_mesh_conversion _ =
   let mesh = Mesh.convert ~vertices:(vertices ()) ~faces:(faces ()) in
-  let vertices = Mesh.vertices mesh
-  and edges = Mesh.edges mesh
-  and facets = Mesh.facets mesh in
+  let vertices = mesh.Mesh.vertices 
+  and edges = mesh.Mesh.edges
+  and facets = mesh.Mesh.facets in
   assert_equal 4 (Array.length vertices);
   assert_equal 5 (Array.length edges);
   assert_equal 2 (Array.length facets);
-  let facet_vertices = Mesh_facet.vertex_ids facets.(0) in
+  let facet_vertices = facets.(0).Mesh.Facet.vertex_ids in
   assert_equal (0, 1, 2) (facet_vertices)
 
 let suite = "mesh convert specs" >::: [

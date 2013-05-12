@@ -6,7 +6,10 @@
 *)
 
 (** data type to manage sweep and prune.  *)
-type t
+type t = {
+  infos:RigidBodyInfo.t option array;
+  current_count: int;
+}
 
 (** Make sweep and prune management data. An argument is number of
     collidable be able to contain it.
@@ -15,17 +18,8 @@ val make : int -> t
 
 val add : t -> RigidBodyInfo.t -> t
 
-(** Get max number of infomation to be able to contain in.  *)
-val get_max_count: t -> int
-
 (** check intersecting two rigid body.
     If two rigid body intersect each other, return two rigid body information,
     then them order is first - second that ordering are in arguments.
 *)
 val intersect: t -> int -> int -> (RigidBodyInfo.t * RigidBodyInfo.t) option
-
-(** Get bodies of the SweepPrune  *)
-val get_bodies : t -> RigidBodyInfo.t option array
-
-(** Set bodies for the SweepPrune  *)
-val set_bodies : t -> RigidBodyInfo.t option array -> t

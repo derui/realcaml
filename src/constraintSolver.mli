@@ -12,28 +12,18 @@
 module SolverBody : sig
 
   (** type of the SolverBody module  *)
-  type t
+  type t = {delta_linear_velocity: Vecmath.Vector.t;
+            delta_angular_velocity: Vecmath.Vector.t;
+            orientation:Vecmath.Quaternion.t;
+            inertia_inv:Vecmath.Matrix3.t;
+            mass_inv:float;
+           }
 
   (** Get empty solver body  *)
   val empty: t
 
   (** Set up new solver body with a state of the rigid body *)
   val setup : State.t -> RigidBody.t -> t
-
-  (** get delta of linear velocity of given solver body *)
-  val delta_linear_velocity : t -> Vecmath.Vector.t
-
-  (** get delta of angular velocity of given solver body *)
-  val delta_angular_velocity : t -> Vecmath.Vector.t
-
-  (** get the orientation of given solver body *)
-  val orientation : t -> Vecmath.Quaternion.t
-
-  (** get the inverse for inertia of given solver body  *)
-  val inertia_inv : t -> Vecmath.Matrix3.t
-
-  (** get the inverse for mass of given solver body *)
-  val mass_inv : t -> float
 end
 
 (** Create new SolverBody with the rigid body information given *)

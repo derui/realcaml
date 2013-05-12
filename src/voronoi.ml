@@ -1,9 +1,8 @@
 open Baselib.Std.Prelude
 
 module V = Vecmath.Vector
-module F = Mesh_facet
-module E = Mesh_edge
-
+module F = Mesh.Facet
+module E = Mesh.Edge
 
 type region_type =
 
@@ -24,26 +23,26 @@ type recent_type = Point of V.t
 
 let voronoi_region mesh facet =
   (* TRANSLATE: 三角形におけるボロノイ領域を求める *)
-  let vertices = Mesh.vertices mesh in
-  let facet = Mesh.facets mesh |> flip Array.get facet in
-  let edges = Mesh.edges mesh in
-  let v1, v2, v3 = F.vertex_ids facet
-  and e1, e2, e3 = F.edge_ids facet
-  and normal = F.normal facet in
+  let vertices = mesh.Mesh.vertices in
+  let facet = mesh.Mesh.facets |> flip Array.get facet in
+  let edges = mesh.Mesh.edges in
+  let v1, v2, v3 = facet.F.vertex_ids 
+  and e1, e2, e3 = facet.F.edge_ids
+  and normal = facet.F.normal in
   (* TRANSLATE: エッジにおけるボロノイ領域を求める *)
   let region_of_edge edge =
-    let v1, v2 = E.vertex_ids edge in
+    let v1, v2 = edge.E.vertex_ids in
     let v1, v2 = (vertices.(v1), vertices.(v2)) in
     let vedge1 = V.cross v1 normal in
     REdge ((v1, v2), vedge1, normal) in
 
   (* TRANSLATE: 指定された点を含む二本のエッジを取得する *)
   let point_of_contained_edge v (e1, e2, e3) =
-    let edges = Mesh.edges mesh in
+    let edges = mesh.Mesh.edges in
     let e1 = edges.(e1)
     and e2 = edges.(e2)
     and e3 = edges.(e3) in
-    let point_contained e v = let ev1, ev2 = E.vertex_ids e in
+    let point_contained e v = let ev1, ev2 = e.E.vertex_ids in
                               v == ev1 || v == ev2 in
     let cont_e1 = point_contained e1 v
     and cont_e2 = point_contained e2 v
@@ -54,7 +53,7 @@ let voronoi_region mesh facet =
 
   (* TRANSLATE: 点のボロノイ領域を求める *)
   let region_of_point point =
-    let e1, e2 = point_of_contained_edge point (F.edge_ids facet) in
+    let e1, e2 = point_of_contained_edge point facet.F.edge_ids in
     match (region_of_edge e1, region_of_edge e2) with
     | (REdge (_, normal1, _), REdge (_, normal2, _)) ->
       RPoint (vertices.(point), normal1, normal2, normal)
