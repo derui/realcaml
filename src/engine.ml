@@ -15,6 +15,7 @@ type t = {
 module RI = RigidBodyInfo
 module M = Vecmath.Matrix4
 module V = Vecmath.Vector
+module Q = Vecmath.Quaternion
 module EO = Engine_option
 
 type pair_update_type = Remove | Update of (Vecmath.Vector.t * float) | New of (Vecmath.Vector.t * float)
@@ -271,7 +272,7 @@ let update_contact_points bodies ((axis, dist) : V.t * float) (pair : Pair.t) : 
 let narrow_phase engine =
   (* TRANSLATE: 各ペア同士について、衝突点を計算する *)
   let current_pair = engine.pair.(engine.pair_swap)
-  and bodies = engine.sweep_prune.SweepPrune.infos in
+  and bodies = engine.sweep_prune.SweepPrune.bodies in
   let is_separate body_a body_b =
     SeparatingAxis.judge_intersect ~body_a ~body_b in
 
@@ -322,7 +323,7 @@ let narrow_phase engine =
 let solve_constraints engine =
   (* TRANSLATE 各Rigid Bodyについて、SolverBodyをセットアップする *)
   let current_pair = engine.pair.(engine.pair_swap)
-  and bodies = engine.sweep_prune.SweepPrune.infos in
+  and bodies = engine.sweep_prune.SweepPrune.bodies in
   let setup_solver = function
     | Some(o) -> Some(o, ConstraintSolver.setup_solver_body o)
     | None -> None in
@@ -369,7 +370,7 @@ let solve_constraints engine =
 
   (* TRANSLATE 更新したSweepPluneを、engineに再度設定する *)
   engine.pair.(engine.pair_swap) <- current_pair;
-  {engine with sweep_prune = {engine.sweep_prune with SweepPrune.infos = bodies}}
+  {engine with sweep_prune = {engine.sweep_prune with SweepPrune.bodies = bodies}}
 ;;
 
 let get_current_pair engine =
@@ -385,21 +386,34 @@ let map_bodies ~f ary =
   ) ary
 ;;
 
-(* let update_bodies engine = *)
-(* (\* TRANSLATE: 算出した速度を、各剛体に反映する' *\) *)
-(*   let time_stap = engine.EO.time_step *)
-(*   and bodies = SweepPrune.get_bodies engine.sweep_prune in *)
+let update_bodies engine =
+(* TRANSLATE: 算出した速度を、各剛体に反映する' *)
+  let time_step = engine.engine_option.EO.time_step
+  and bodies = engine.sweep_prune.SweepPrune.bodies  in
 
-(*   let update_position ri = *)
-(*     let state = RI.state ri in *)
-(*     let pos = State.pos state in *)
-(*   map_bodies ~f:() *)
-(* ;; *)
+  let calc_delta_orientation angular time_step =
+    let angular = V.scale ~v:angular ~scale:time_step in
+    let axis = V.scale ~v:angular ~scale:(1.0 /. V.norm angular) in
+    Q.make ~angle:(cos |< V.norm angular) ~vector:(V.scale ~v:axis ~scale:(sin |< V.norm angular)) in
+
+  let update_state_position ri =
+    let state = ri.RI.state in
+    let pos = state.State.pos in
+    let state = {state with State.pos = V.add pos state.State.linear_velocity} in
+    let delta = calc_delta_orientation state.State.angular_velocity time_step in
+    let state = {state with State.orientation = Q.multiply state.State.orientation delta} in
+    {ri with RI.state = state} in
+    
+  {engine with sweep_prune = {
+    engine.sweep_prune with SweepPrune.bodies = map_bodies ~f:update_state_position bodies}
+  }
+;;
 
 let execute_pipeline engine =
 (* TRANSLATE: 剛体に外力を加える *)
   let engine = broad_phase engine in
   let engine = narrow_phase engine in
   let engine = solve_constraints engine in
+  let engine = update_bodies engine in
   engine
 ;;  

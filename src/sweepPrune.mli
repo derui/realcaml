@@ -7,7 +7,7 @@
 
 (** data type to manage sweep and prune.  *)
 type t = {
-  infos:RigidBodyInfo.t option array;
+  bodies:RigidBodyInfo.t option array;
   current_count: int;
 }
 

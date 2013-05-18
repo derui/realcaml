@@ -2,16 +2,16 @@ open Baselib.Std.Prelude
 module RBI = RigidBodyInfo
 
 type t = {
-  infos:RBI.t option array;
+  bodies:RBI.t option array;
   current_count: int;
 }
 
 let make count =
-  {current_count = 0; infos = Array.make count None;}
+  {current_count = 0; bodies = Array.make count None;}
 
 let add prune info =
   let current = prune.current_count in
-  prune.infos.(current) <- Some info;
+  prune.bodies.(current) <- Some info;
   {prune with current_count = succ current}
   
 let intersect info ind_a ind_b =
@@ -19,7 +19,7 @@ let intersect info ind_a ind_b =
   if not (in_range ind_a info.current_count) ||
     not (in_range ind_b info.current_count) then None
   else
-    match (info.infos.(ind_a), info.infos.(ind_b)) with
+    match (info.bodies.(ind_a), info.bodies.(ind_b)) with
     | (None, _) | (_, None) -> None
     | (Some a_inf, Some b_inf) ->
       let a_pos = a_inf.RBI.collidable.Collidable.center
