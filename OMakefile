@@ -25,6 +25,7 @@ open MyOCaml
 NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
 BYTE_ENABLED = true
 
+INSTALLED = $(BIG_ROOT)/installed
 
 .PHONY: all install clean 
 
