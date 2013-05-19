@@ -1,9 +1,9 @@
-open Vecmath
+open Candyvec
 
 type t = {
   mesh:Mesh.t;
-  offset_pos:Vecmath.Vector.t;
-  offset_orientation:Vecmath.Quaternion.t;
+  offset_pos:Candyvec.Vector.t;
+  offset_orientation:Candyvec.Quaternion.t;
 }
 
 let offset_transform {offset_pos; offset_orientation;_} =

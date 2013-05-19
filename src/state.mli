@@ -9,10 +9,10 @@ type motion = Active | Static
 
 (** Types including some statements of rigid body. *)
 type t = {
-  pos:Vecmath.Vector.t;
-  orientation:Vecmath.Quaternion.t;
-  linear_velocity:Vecmath.Vector.t;
-  angular_velocity:Vecmath.Vector.t;
+  pos:Candyvec.Vector.t;
+  orientation:Candyvec.Quaternion.t;
+  linear_velocity:Candyvec.Vector.t;
+  angular_velocity:Candyvec.Vector.t;
   motion_type:motion;
 }
 

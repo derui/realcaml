@@ -1,5 +1,5 @@
 type t = {
-  axis:Vecmath.Vector.t;
+  axis:Candyvec.Vector.t;
   jac_diag_inv:float;
   rhs:float;
   lower_limit:float;

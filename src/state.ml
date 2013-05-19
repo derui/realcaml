@@ -1,15 +1,15 @@
 type motion = Active | Static
 
 type t = {
-  pos:Vecmath.Vector.t;
-  orientation:Vecmath.Quaternion.t;
-  linear_velocity:Vecmath.Vector.t;
-  angular_velocity:Vecmath.Vector.t;
+  pos:Candyvec.Vector.t;
+  orientation:Candyvec.Quaternion.t;
+  linear_velocity:Candyvec.Vector.t;
+  angular_velocity:Candyvec.Vector.t;
   motion_type:motion;
 }
 
 let empty =
-  {pos = Vecmath.Vector.zero ; orientation = Vecmath.Quaternion.identity ();
-   linear_velocity = Vecmath.Vector.zero;
-   angular_velocity = Vecmath.Vector.zero;
+  {pos = Candyvec.Vector.zero ; orientation = Candyvec.Quaternion.identity ();
+   linear_velocity = Candyvec.Vector.zero;
+   angular_velocity = Candyvec.Vector.zero;
    motion_type = Static}

@@ -9,9 +9,9 @@
 (** type of shape  *)
 type t = {
   mesh:Mesh.t;
-  offset_pos:Vecmath.Vector.t;
-  offset_orientation:Vecmath.Quaternion.t;
+  offset_pos:Candyvec.Vector.t;
+  offset_orientation:Candyvec.Quaternion.t;
 }
 
 (** Get offset transformation matrix of given shape  *)
-val offset_transform : t -> Vecmath.Matrix4.t
+val offset_transform : t -> Candyvec.Matrix4.t

@@ -1,10 +1,10 @@
 type t = {
   shapes:Shape.t array;
-  center:Vecmath.Vector.t;
-  half_size:Vecmath.Vector.t;
+  center:Candyvec.Vector.t;
+  half_size:Candyvec.Vector.t;
 }
 
 let empty = {shapes = [||];
-             center = Vecmath.Vector.zero;
-             half_size = Vecmath.Vector.zero
+             center = Candyvec.Vector.zero;
+             half_size = Candyvec.Vector.zero
             }

@@ -17,13 +17,12 @@
 ########################################################################
 # The standard OMakefile.
 # You will usually need to modify this file for your project.
-open MyOCaml
 
 ########################################################################
 # Phony targets are scoped, so you probably want to declare them first.
 #
 
-.PHONY: all install clean
+.PHONY: lib install clean
 
 ########################################################################
 # Subdirectories.
@@ -44,6 +43,8 @@ open MyOCaml
 USE_OCAMLFIND = true
 #
 OCAMLPACKS[] =
+    sugarpot
+    candyvec
 #    pack1
 #    pack2
 #
@@ -55,7 +56,7 @@ if $(not $(OCAMLFIND_EXISTS))
 #
 # Include path
 #
-OCAMLINCLUDES += ../lib/baselib/build/ ../lib/vecmath/build/
+OCAMLINCLUDES += 
 
 #
 # Compile native or byte code?
@@ -83,8 +84,10 @@ FILES[] = $(removesuffix $(ls *ml))
 #    file1
 #    file2
 #
-LIB = camelback
+LIB = realcamel
 #
 MyOCamlPackage($(LIB), $(FILES), $(EMPTY), -linkall, true)
 
-.DEFAULT: $(OCamlPackageGeneratedFiles $(LIB), false)
+lib: $(OCamlPackageGeneratedFiles $(LIB), false)
+
+.DEFAULT: lib

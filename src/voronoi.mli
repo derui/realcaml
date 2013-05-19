@@ -9,8 +9,8 @@
 (** type of a voronoi region *)
 type t
 
-type recent_type = Point of Vecmath.Vector.t
-                   | Edge of Vecmath.Vector.t * Vecmath.Vector.t
+type recent_type = Point of Candyvec.Vector.t
+                   | Edge of Candyvec.Vector.t * Candyvec.Vector.t
                    | Shape
 
 (** Calculate voronoi regions with vertices of a some shape.
@@ -28,4 +28,4 @@ val voronoi_region :Mesh.t -> int -> t
     @param regions voronoi regions of the shape to calculate type of recent point with a point
     @return type of recent point
 *)
-val recent_of_region : Vecmath.Vector.t -> t -> recent_type
+val recent_of_region : Candyvec.Vector.t -> t -> recent_type

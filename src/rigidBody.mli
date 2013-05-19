@@ -8,7 +8,7 @@
 
 (** type of rigid body  *)
 type t = {
-  inertia:Vecmath.Matrix3.t;
+  inertia:Candyvec.Matrix3.t;
   mass:float;
   restitution:float;
   friction:float;

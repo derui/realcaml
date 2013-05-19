@@ -1,4 +1,4 @@
-open Vecmath
+open Candyvec
 
 type t = {
   body:RigidBody.t;

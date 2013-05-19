@@ -1,8 +1,8 @@
-module Mesh = Camelback.Mesh
+module Mesh = Realcamel.Mesh
 open OUnit
 
 let vertices () =
-  let open Vecmath.Vector in
+  let open Candyvec.Vector in
   [| {x = 0.0;y = 1.0;z = 0.0;};
      {x = 0.0;y = 0.0;z = 0.0;};
      {x = 1.0;y = 0.0;z = 0.0;};
@@ -27,6 +27,3 @@ let test_mesh_conversion _ =
 let suite = "mesh convert specs" >::: [
   "normal convert" >:: test_mesh_conversion
 ]
-
-let _ =
-  run_test_tt_main suite

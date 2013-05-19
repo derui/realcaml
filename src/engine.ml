@@ -1,5 +1,5 @@
-open Baselib.Std.Prelude
-open Baselib.Std
+open Sugarpot.Std.Prelude
+open Sugarpot.Std
 
 type t = {
   engine_option : Engine_option.engine_option;
@@ -13,12 +13,12 @@ type t = {
 }
 
 module RI = RigidBodyInfo
-module M = Vecmath.Matrix4
-module V = Vecmath.Vector
-module Q = Vecmath.Quaternion
+module M = Candyvec.Matrix4
+module V = Candyvec.Vector
+module Q = Candyvec.Quaternion
 module EO = Engine_option
 
-type pair_update_type = Remove | Update of (Vecmath.Vector.t * float) | New of (Vecmath.Vector.t * float)
+type pair_update_type = Remove | Update of (Candyvec.Vector.t * float) | New of (Candyvec.Vector.t * float)
 
 let make ?(time_step=0.016) ?(contact_bias=0.1) ?(contact_stop=0.001)
     ?(iteration=10) ?(max_bodies=500) ?(max_pairs=5000) () =
@@ -106,7 +106,7 @@ let is_judge_plane plane normal = V.dot plane.Mesh.Facet.normal normal >= 0.0
 ;;
 
 let simple_inverse m =
-  let mat3 = M.upper3x3 m |> Vecmath.Matrix3.transpose
+  let mat3 = M.upper3x3 m |> Candyvec.Matrix3.transpose
   and vec = M.get_trans m |> V.invert in
   let trans = M.translation vec
   and rotate = M.replace_upper3x3 m mat3 in
@@ -120,7 +120,7 @@ let get_coodinate_localization_matrix (axis, dist) body_a body_b =
   let world_a = RI.get_world_transform body_a
   and world_b = RI.get_world_transform body_b in
   let trans_b = M.translation (V.invert |< V.scale ~v:axis ~scale:(dist *. 1.1)) in
-  let open Baselib.Std.Option.Open in
+  let open Sugarpot.Std.Option.Open in
   simple_inverse world_a |> (fun mat -> M.multiply trans_b (M.multiply mat world_b))
 ;;
 
@@ -134,7 +134,7 @@ let get_coodinate_localization_matrix (axis, dist) body_a body_b =
 
 let get_plane_closest_points (axis, dist) body_a body_b trans_mat =
   let shapes = body_a.RI.collidable.Collidable.shapes in
-  let contacts : Vecmath.Vector.t list ref = ref [] in
+  let contacts : Candyvec.Vector.t list ref = ref [] in
 
   (* TRANSLATE: それぞれのメッシュについて、offsetを反映させた上で実行させる。 *)
   Array.iter (fun shape ->
@@ -163,10 +163,10 @@ let get_plane_closest_points (axis, dist) body_a body_b trans_mat =
 let get_edge_closest_points ((axis, dist) : V.t * float)
     (body_a : RigidBodyInfo.t) (body_b : RigidBodyInfo.t) (trans_mat : M.t): (V.t * float) list =
   let shapes = body_a.RI.collidable.Collidable.shapes in
-  let contacts : Vecmath.Vector.t list ref = ref [] in
+  let contacts : Candyvec.Vector.t list ref = ref [] in
   let transformed_mesh mat = flip Mesh.transform_vertices mat in
   let edge_to_segment vertices edge = let (a, b) = edge.Mesh.Edge.vertex_ids in
-                                      Vecmath.Segment.make vertices.(a) vertices.(b) in
+                                      Candyvec.Segment.make vertices.(a) vertices.(b) in
 
   (* TRANSLATE: それぞれのメッシュについて、offsetを反映させた上で、処理の果ていを行う *)
   Array.iter (fun shape ->
@@ -178,7 +178,7 @@ let get_edge_closest_points ((axis, dist) : V.t * float)
         let points = Array.fold_left (fun contacts edge_b ->
           let edge_a = edge_to_segment shape.Shape.mesh.Mesh.vertices edge_a
           and edge_b = edge_to_segment shape_b.Shape.mesh.Mesh.vertices edge_b in
-          let (e1, e2) = Vecmath.Segment.closest edge_a edge_b in
+          let (e1, e2) = Candyvec.Segment.closest edge_a edge_b in
           e1 :: contacts
         ) [] mesh_b.Mesh.edges in
 
@@ -222,7 +222,7 @@ let update_contact_points bodies ((axis, dist) : V.t * float) (pair : Pair.t) : 
 
     if contacts.Contact.contact_num < 4 then
       let friction = contacts.Contact.friction in
-      let module A = Baselib.Std.Array in
+      let module A = Sugarpot.Std.Array in
       {pair with Pair.contact = {
         Contact.contact_num = succ contacts.Contact.contact_num;
         friction; contact_points = Array.of_list points_array;
@@ -260,7 +260,7 @@ let update_contact_points bodies ((axis, dist) : V.t * float) (pair : Pair.t) : 
           combi_points) |>
               List.sort (fun (_, square1) (_, square2) -> compare square1 square2) |> List.hd in
       let friction = contacts.Contact.friction in
-      let module A = Baselib.Std.Array in
+      let module A = Sugarpot.Std.Array in
       {pair with Pair.contact = {
         Contact.contact_num = contacts.Contact.contact_num;
         friction; contact_points = [|a;b;c;d|]

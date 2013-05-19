@@ -1,4 +1,4 @@
-open Baselib.Std.Prelude
+open Sugarpot.Std.Prelude
 module RBI = RigidBodyInfo
 
 type t = {
@@ -28,7 +28,7 @@ let intersect info ind_a ind_b =
       and a_size = a_inf.RBI.collidable.Collidable.half_size
       and b_pos = b_inf.RBI.collidable.Collidable.center
       and b_size = b_inf.RBI.collidable.Collidable.half_size in
-      let open Vecmath.Vector in
+      let open Candyvec.Vector in
       (* TRANSLATE: X軸から衝突をチェックしてみる *)
       if AABB.intersect_one_axis ~pos_a:a_pos.x ~len_a:a_size.x
         ~pos_b:b_pos.x ~len_b:b_size.x then

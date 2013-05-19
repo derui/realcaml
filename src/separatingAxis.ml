@@ -1,6 +1,6 @@
-open Baselib.Std.Prelude
+open Sugarpot.Std.Prelude
 
-open Vecmath
+open Candyvec
 
 module R = RigidBodyInfo
 
@@ -10,14 +10,14 @@ type separating_type = Edge             (* Edge to edge *)
                        | APlane         (* A plane of the body A *)
                        | BPlane         (* A plane of the body B *)
 
-type separating_axis = separating_type * Vecmath.Vector.t * depth
+type separating_axis = separating_type * Candyvec.Vector.t * depth
 
 (* TRANSLATE: ある軸上にメッシュを投影した場合の最大値と最小値を取得する *)
 let get_projection axis mesh =
   let vertices = mesh.Mesh.vertices in
 
   Array.fold_left (fun (pmax, pmin) elem ->
-    let projected = Vecmath.Vector.dot elem axis in
+    let projected = Candyvec.Vector.dot elem axis in
     (max pmax projected, min pmin projected)
   ) (min_float, max_float) vertices
 
@@ -59,7 +59,7 @@ let is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_ax
     else Some (sep_axis, d1)
 
 let judge_intersect ~body_a ~body_b =
-  let open Vecmath in
+  let open Candyvec in
   let state_a = body_a.R.state 
   and state_b = body_b.R.state in
   let world_a = Util.world_transform state_a.State.orientation state_a.State.pos 
@@ -107,7 +107,7 @@ let judge_intersect ~body_a ~body_b =
       ) (styp, axis, dist)
     ) (styp, axis, dist) in
 
-  let open Baselib.Std.Option.Open in
+  let open Sugarpot.Std.Option.Open in
   let rec intersect_loop ind_a ind_b =
     if ind_a >= length_a then None
     else if ind_b >= length_b then intersect_loop (succ ind_a) 0

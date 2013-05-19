@@ -13,7 +13,7 @@ type separating_type = Edge             (* Edge to edge *)
                        | APlane         (* A plane of the body A *)
                        | BPlane         (* A plane of the body B *)
 
-type separating_axis = separating_type * Vecmath.Vector.t * depth
+type separating_axis = separating_type * Candyvec.Vector.t * depth
 
 (** Judge each meshes separeted or not. This funciton is based on
     separating axis theorem.

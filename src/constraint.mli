@@ -7,7 +7,7 @@
 
 type t = {
   (** constraint axis  *)
-  axis:Vecmath.Vector.t;
+  axis:Candyvec.Vector.t;
   (** the denominator of constraint expression  *)
   jac_diag_inv:float;
   (** the initial power of constraint *)

@@ -21,7 +21,7 @@ module Facet : sig
   type t = {
     vertex_ids:int * int * int;
     edge_ids: int * int * int;
-    normal:Vecmath.Vector.t;
+    normal:Candyvec.Vector.t;
   }
 
 end
@@ -29,7 +29,7 @@ end
 (** type of convex mesh  *)
 type t = {
   edges: Edge.t array;
-  vertices: Vecmath.Vector.t array;
+  vertices: Candyvec.Vector.t array;
   facets:Facet.t array;
 }
   
@@ -37,7 +37,7 @@ type t = {
     convex mesh, and a front face of given faces is counter-clockwise which vertices consisted of
     face is.
 *)
-val convert: vertices:Vecmath.Vector.t array -> faces:(int * int * int) array -> t
+val convert: vertices:Candyvec.Vector.t array -> faces:(int * int * int) array -> t
 
 (** Return new mesh is transformed by given transformation matrix. *)
-val transform_vertices: t -> Vecmath.Matrix4.t -> t
+val transform_vertices: t -> Candyvec.Matrix4.t -> t

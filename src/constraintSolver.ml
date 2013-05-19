@@ -1,9 +1,9 @@
-module V = Vecmath.Std.Vector
-module M = Vecmath.Std.Matrix4
-module M3 = Vecmath.Std.Matrix3
-module Q = Vecmath.Std.Quaternion
+module V = Candyvec.Std.Vector
+module M = Candyvec.Std.Matrix4
+module M3 = Candyvec.Std.Matrix3
+module Q = Candyvec.Std.Quaternion
 
-open Baselib.Std.Prelude
+open Sugarpot.Std.Prelude
 
 (**
    Contain for solving constraint between rigid bodies.
@@ -14,14 +14,14 @@ module SolverBody = struct
   type t = {delta_linear_velocity: V.t;
             delta_angular_velocity: V.t;
             orientation:Q.t;
-            inertia_inv:Vecmath.Matrix3.t;
+            inertia_inv:Candyvec.Matrix3.t;
             mass_inv:float;
            }
 
   let empty = {delta_linear_velocity = V.zero;
             delta_angular_velocity = V.zero;
             orientation = Q.identity ();
-            inertia_inv = Vecmath.Matrix3.identity ();
+            inertia_inv = Candyvec.Matrix3.identity ();
             mass_inv = 0.0;
            }
 
@@ -31,10 +31,10 @@ module SolverBody = struct
     let (inertia, mass) = match state.State.motion_type with
       | State.Static -> (M.scaling V.zero, 0.0)
       | State.Active ->
-        let open Baselib.Std.Prelude in
-        let transposed = Vecmath.Matrix3.transpose body.RigidBody.inertia in
+        let open Sugarpot.Std.Prelude in
+        let transposed = Candyvec.Matrix3.transpose body.RigidBody.inertia in
         (M.multiply (M.multiply orient_mat
-                       (Vecmath.Matrix_util.to_4x4 transposed))
+                       (Candyvec.Matrix_util.to_4x4 transposed))
         (M.transpose orient_mat), 1.0 /. body.RigidBody.mass) in
 
     {delta_linear_velocity = V.zero;
@@ -61,7 +61,7 @@ let setup_constraint (bodyA, solverA) (bodyB, solverB) contact pair_type opt =
     let velocityA = calc_velocity bodyA.RigidBodyInfo.state rA
     and velocityB = calc_velocity bodyB.RigidBodyInfo.state rB in
     let relative_velocity = V.sub velocityA velocityB in
-    let module M3 = Vecmath.Matrix3 in
+    let module M3 = Candyvec.Matrix3 in
     let scale = M3.scaling {V.x = solverA.SolverBody.mass_inv +. solverB.SolverBody.mass_inv;
                             V.y = solverA.SolverBody.mass_inv +. solverB.SolverBody.mass_inv;
                             V.z = solverA.SolverBody.mass_inv +. solverB.SolverBody.mass_inv;} in

@@ -10,8 +10,8 @@
 
 (** A `AABB` type.  *)
 type t = {
-  center:Vecmath.Vector.t;
-  half_size: Vecmath.Vector.t
+  center:Candyvec.Vector.t;
+  half_size: Candyvec.Vector.t
 }
 
 (** Check intersection each AABB.  *)

@@ -13,17 +13,17 @@ module Facet = struct
   type t = {
     vertex_ids:int * int * int;
     edge_ids: int * int * int;
-    normal:Vecmath.Vector.t;
+    normal:Candyvec.Vector.t;
   }
 
 end
 
-open Baselib.Std.Prelude
+open Sugarpot.Std.Prelude
 
-module V = Vecmath.Vector
-module MT = Vecmath.Matrix4
+module V = Candyvec.Vector
+module MT = Candyvec.Matrix4
 
-module M = Baselib.Std.Map.Make(struct
+module M = Sugarpot.Std.Map.Make(struct
   type t = int * int
   let compare (aa, ab) (ba, bb) =
     if Pervasives.compare aa ba = 0 then
@@ -36,7 +36,7 @@ let max_facets = 64
 
 type t = {
   edges: Edge.t array;
-  vertices: Vecmath.Vector.t array;
+  vertices: Candyvec.Vector.t array;
   facets:Facet.t array;
 }
 

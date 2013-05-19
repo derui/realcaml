@@ -12,10 +12,10 @@
 module SolverBody : sig
 
   (** type of the SolverBody module  *)
-  type t = {delta_linear_velocity: Vecmath.Vector.t;
-            delta_angular_velocity: Vecmath.Vector.t;
-            orientation:Vecmath.Quaternion.t;
-            inertia_inv:Vecmath.Matrix3.t;
+  type t = {delta_linear_velocity: Candyvec.Vector.t;
+            delta_angular_velocity: Candyvec.Vector.t;
+            orientation:Candyvec.Quaternion.t;
+            inertia_inv:Candyvec.Matrix3.t;
             mass_inv:float;
            }
 

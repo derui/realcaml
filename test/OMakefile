@@ -46,6 +46,8 @@ USE_OCAMLFIND = true
 OCAMLPACKS[] =
     oUnit
     num
+    candyvec
+    sugarpot
 #    pack1
 #    pack2
 #
@@ -57,7 +59,7 @@ OCAMLPACKS[] =
 #
 # Include path
 #
-OCAMLINCLUDES += ../lib/baselib/build ../lib/vecmath/build ../src
+OCAMLINCLUDES += ../src
 
 #
 # Compile native or byte code?
@@ -67,7 +69,7 @@ OCAMLINCLUDES += ../lib/baselib/build ../lib/vecmath/build ../src
 NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
 BYTE_ENABLED = true
 
-OCAML_LIBS += ../lib/baselib/build/baselib ../lib/vecmath/build/vecmath ../src/camelback
+OCAML_LIBS += ../src/realcamel
 #
 # Various options
 #
@@ -87,9 +89,12 @@ FILES[] = $(removesuffix $(ls *ml))
 #    file2
 #
 
-TARGET = $(OCamlProgram test_mesh, test_mesh)
+TARGET = $(OCamlProgram realcamel_tests, $(removesuffix .ml, $(ls *.ml)))
 
 .DEFAULT: $(TARGET)
+
+test:
+	./realcamel_tests
 
 clean:
 	rm -f $(TARGET)

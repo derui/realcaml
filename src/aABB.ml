@@ -1,7 +1,7 @@
 (** A `AABB` type.  *)
 type t = {
-  center:Vecmath.Vector.t;
-  half_size: Vecmath.Vector.t
+  center:Candyvec.Vector.t;
+  half_size: Candyvec.Vector.t
 }
 
 let intersect_one_axis ~pos_a ~len_a ~pos_b ~len_b =
@@ -14,7 +14,7 @@ let intersect_one_axis ~pos_a ~len_a ~pos_b ~len_b =
   else true
 
 let intersect box_a box_b =
-  let open Vecmath.Vector in
+  let open Candyvec.Vector in
   let x_sect = intersect_one_axis box_a.center.x box_a.half_size.x
     box_b.center.x box_b.half_size.x
   and y_sect = intersect_one_axis box_a.center.y box_a.half_size.y
