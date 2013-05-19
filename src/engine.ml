@@ -74,7 +74,7 @@ let broad_phase engine =
     (* TRANSLATE: どちらかの配列を超えた場合、処理は終了とする。 *)
     if newc >= count || oldc >= old_count then newp
     else
-      let new_key = newp.(newc).Pair.key 
+      let new_key = newp.(newc).Pair.key
       and old_key = oldp.(oldc).Pair.key in
       let c = Int64.compare new_key old_key in
       (* TRANSLATE: 同じキーが存在している場合、前の配列のPairをKeepとして更新する *)
@@ -247,9 +247,9 @@ let update_contact_points bodies ((axis, dist) : V.t * float) (pair : Pair.t) : 
                           (points_without_max.(1), points_without_max.(2),
                            points_without_max.(3));] in
       let calc_space a b c d =
-        let a = a.ContactPoint.pointA 
-        and b = b.ContactPoint.pointA 
-        and c = c.ContactPoint.pointA 
+        let a = a.ContactPoint.pointA
+        and b = b.ContactPoint.pointA
+        and c = c.ContactPoint.pointA
         and d = d.ContactPoint.pointA in
         List.sort compare [V.cross (V.sub a c) (V.sub b d) |> V.norm |> abs_float;
                            V.cross (V.sub a b) (V.sub d c) |> V.norm |> abs_float;
@@ -343,7 +343,7 @@ let solve_constraints engine =
     | (Some(solv_a), Some(solv_b)) ->
       let ((bodyA, solverA), (bodyB, solverB)) =
         ConstraintSolver.solve solv_a solv_b pair.Pair.contact engine.engine_option in
-      let indA = Int32.to_int pair.Pair.indexA 
+      let indA = Int32.to_int pair.Pair.indexA
       and indB = Int32.to_int pair.Pair.indexB in
       solver_bodies.(indA) <- Some(bodyA, solverA);
       solver_bodies.(indB) <- Some(bodyB, solverB) in
@@ -403,7 +403,7 @@ let update_bodies engine =
     let delta = calc_delta_orientation state.State.angular_velocity time_step in
     let state = {state with State.orientation = Q.multiply state.State.orientation delta} in
     {ri with RI.state = state} in
-    
+
   {engine with sweep_prune = {
     engine.sweep_prune with SweepPrune.bodies = map_bodies ~f:update_state_position bodies}
   }
@@ -416,4 +416,4 @@ let execute_pipeline engine =
   let engine = solve_constraints engine in
   let engine = update_bodies engine in
   engine
-;;  
+;;

@@ -8,12 +8,14 @@ type t = {
 
 let make count =
   {current_count = 0; bodies = Array.make count None;}
+;;
 
 let add prune info =
   let current = prune.current_count in
   prune.bodies.(current) <- Some info;
   {prune with current_count = succ current}
-  
+;;
+
 let intersect info ind_a ind_b =
   let in_range i range = i > 0 && i < range in
   if not (in_range ind_a info.current_count) ||
@@ -39,3 +41,4 @@ let intersect info ind_a ind_b =
         if iy && iz then Some (a_inf, b_inf) else None
       else
         None
+;;

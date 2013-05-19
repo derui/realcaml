@@ -1,5 +1,4 @@
 module Mesh = Camelback.Mesh
-module Mesh_facet = Camelback.Mesh_facet
 open OUnit
 
 let vertices () =
