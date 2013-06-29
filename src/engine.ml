@@ -30,6 +30,11 @@ let make ?(time_step=0.016) ?(contact_bias=0.1) ?(contact_stop=0.001)
    pair_count = [|0; 0|];
    pair = Array.make_matrix 2 max_pairs Pair.empty;
   }
+;;
+
+let add_body engine body =
+  {engine with sweep_prune = SweepPrune.add engine.sweep_prune body}
+;;
 
 (* TRANSLATE: rigid body同士の衝突判定を行う。 *)
 let intersect_bodies engine =

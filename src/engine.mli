@@ -30,3 +30,11 @@ val make: ?time_step:float -> ?contact_bias:float -> ?contact_stop:float ->
 
 val execute_pipeline : t -> t
 (** Run simulation pipeline by given engine. Executing result is effected to given engine. *)
+
+(** Add a body into the engine to include physics simulation.
+
+    @param engine The engine to add a body to.
+    @param body A body to add into the engine
+    @return The engine is added a body was given
+*)
+val add_body : t -> RigidBodyInfo.t -> t

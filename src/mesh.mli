@@ -32,7 +32,7 @@ type t = {
   vertices: Candyvec.Vector.t array;
   facets:Facet.t array;
 }
-  
+
 (** Convert vertices and vertex indexed faces. Given original data must necessary
     convex mesh, and a front face of given faces is counter-clockwise which vertices consisted of
     face is.

@@ -12,3 +12,6 @@ let get_world_transform {state;_} =
   let trans_mat = Matrix4.translation pos
   and orient_mat = Quaternion.to_matrix orientation in
   Matrix4.multiply trans_mat orient_mat
+
+let set_pos rbi pos =
+  {rbi with state = {rbi.state with State.pos = pos}}
