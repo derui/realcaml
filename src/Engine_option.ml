@@ -6,4 +6,5 @@ type engine_option = {
   iteration:int;
   max_bodies:int;
   max_pairs:int;
+  gravity:Candyvec.Vector.t;
 }

@@ -19,5 +19,8 @@ type t = {
 (** Get transformation matrix to world coodinates *)
 val get_world_transform: t -> Candyvec.Matrix4.t
 
+(** Get position of the RigidBodyInfo *)
+val pos : t -> Candyvec.Vector.t
+
 (** Set position of the RigidBodyInfo *)
 val set_pos : t -> Candyvec.Vector.t -> t

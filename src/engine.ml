@@ -24,6 +24,7 @@ let make ?(time_step=0.016) ?(contact_bias=0.1) ?(contact_stop=0.001)
     ?(iteration=10) ?(max_bodies=500) ?(max_pairs=5000) () =
   {engine_option = {Engine_option.time_step;
                     contact_bias; contact_stop; iteration; max_bodies; max_pairs;
+                    gravity = {V.x = 0.0; y = -9.8; z = 0.0}
                    };
    sweep_prune = SweepPrune.make max_bodies;
    pair_swap = 0;
@@ -34,6 +35,9 @@ let make ?(time_step=0.016) ?(contact_bias=0.1) ?(contact_stop=0.001)
 
 let add_body engine body =
   {engine with sweep_prune = SweepPrune.add engine.sweep_prune body}
+;;
+
+let bodies engine = engine.sweep_prune.SweepPrune.bodies
 ;;
 
 (* TRANSLATE: rigid body同士の衝突判定を行う。 *)
@@ -414,8 +418,31 @@ let update_bodies engine =
   }
 ;;
 
+(* 各剛体に重力の形で外力を与える。それぞれの剛体は並進運動を行う *)
+let apply_gravity engine =
+  let bodies = engine.sweep_prune.SweepPrune.bodies in
+  let updated =
+    Array.map (fun body ->
+    match body with
+    | None -> None
+    | Some body ->
+      let mass = body.RI.body.RigidBody.mass in
+      let gravity = engine.engine_option.EO.gravity
+      and time_step = engine.engine_option.EO.time_step in
+      let force = V.scale ~v:gravity ~scale:mass in
+      let ri_body, state = Force.apply_force ~body:bdy.RI.body ~state:body.RI.state
+              ~force ~torque:V.zero ~time_step in
+      Some ({body with RI.state = state; RI.body = ri_body})
+    ) bodies in
+  {engine with sweep_prune = {
+    engine.sweep_prune with SweepPrune.bodies = updated;
+   }
+  }
+;;
+
 let execute_pipeline engine =
-(* TRANSLATE: 剛体に外力を加える *)
+  (* TRANSLATE: 剛体に重力の形で外力を与える *)
+  let engine = apply_gravity engine in
   let engine = broad_phase engine in
   let engine = narrow_phase engine in
   let engine = solve_constraints engine in
