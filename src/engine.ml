@@ -430,7 +430,7 @@ let apply_gravity engine =
       let gravity = engine.engine_option.EO.gravity
       and time_step = engine.engine_option.EO.time_step in
       let force = V.scale ~v:gravity ~scale:mass in
-      let ri_body, state = Force.apply_force ~body:bdy.RI.body ~state:body.RI.state
+      let ri_body, state = Force.apply_force ~body:body.RI.body ~state:body.RI.state
               ~force ~torque:V.zero ~time_step in
       Some ({body with RI.state = state; RI.body = ri_body})
     ) bodies in
