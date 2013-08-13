@@ -7,7 +7,10 @@
 
 type t = {
   distance:float;
-  pointA: Candyvec.Vector.t; pointB:Candyvec.Vector.t;
-  normal:Candyvec.Vector.t;
-  constraints: Constraint.t array;
+  pointA: Candyvec.Std.Vector.t; pointB:Candyvec.Std.Vector.t;
+  normal:Candyvec.Std.Vector.t;
+  constraints: Constraint.t list;
 }
+
+val empty : t
+(** Get empty contact point *)

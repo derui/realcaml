@@ -6,7 +6,7 @@
 *)
 
 (** Type of pair creation and keeping.  *)
-type pair = New | Keep
+type pair = New | Keep | Empty
 
 type t = {
   pair_type:pair;

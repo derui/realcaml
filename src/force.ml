@@ -8,7 +8,4 @@ let apply_force ~body ~state ~force ~torque ~time_step =
   let velocity = state.State.linear_velocity in
   let delta_velocity =  V.scale ~v:delta_velocity ~scale:time_step in
   let new_velocity = V.add velocity delta_velocity in
-  let (x,y,z) = V.of_vec new_velocity in
-  Printf.printf "body => x:%f y:%f z:%f\n" x y z;
-
   (body, {state with State.linear_velocity = new_velocity})

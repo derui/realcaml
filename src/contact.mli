@@ -12,7 +12,7 @@ type t = {
   (** friction per contained contact points  *)
   friction:float;
   (** contact points of this *)
-  contact_points:ContactPoint.t array;
+  contact_points:ContactPoint.t list;
 }
 
 (** Get empty contact. *)

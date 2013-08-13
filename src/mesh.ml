@@ -81,7 +81,6 @@ let convert_edges vertices faces =
         M.add buf ~key:edge ~data:{vertex_indices = [indexa; indexb];
                                    faces = [face_id];}
       | (Some e, _) | (_, Some e) ->
-        Printf.printf "%d\n" face_id;
         e.faces <- face_id :: e.faces;
         buf
     ) buf [ea; eb; ec] in
@@ -94,7 +93,7 @@ let convert ~vertices ~faces =
   (* TODO 縮退面を事前に削除する。 *)
   let faces = Array.of_list |< List.filter (fun e ->
     let (ea, eb, ec) = edges_of_face e in
-    is_degenerate vertices (ea, eb, ec)
+    not (is_degenerate vertices (ea, eb, ec))
   ) (Array.to_list faces) in
 
   let edge_buf = convert_edges vertices faces in
@@ -105,7 +104,7 @@ let convert ~vertices ~faces =
      face_ids = data.faces
     } :: l
   ) ~init:[] in
-  (* TODO faceの配列を、Facetの配列として作成する。Edgeの配列はすでに用意されているので、
+  (* TODO faceの配列を、Faceの配列として作成する。Edgeの配列はすでに用意されているので、
      配列の内部から、一致するindexを取得して利用する。
   *)
   let faces = Array.map (fun (va, vb, vc) ->
@@ -126,7 +125,7 @@ let convert ~vertices ~faces =
       {Facet.vertex_ids = (va, vb, vc); edge_ids = (ea, eb, ec);normal}
   ) faces in
   {vertices = vertices; edges = edge_buf; facets = faces;}
-
+;;
 
 let transform_vertices mesh mat =
   let new_vertices = Array.map (fun vec -> MT.mult_vec ~mat ~vec) mesh.vertices in

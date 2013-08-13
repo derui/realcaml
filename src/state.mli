@@ -18,3 +18,6 @@ type t = {
 
 (** Get a empty state. *)
 val empty: t
+
+(** Get a transform matrix to convert world coodinate. *)
+val to_world_transform : t -> Candyvec.Matrix4.t

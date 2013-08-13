@@ -1,23 +1,24 @@
 open Sugarpot.Std.Prelude
 
-open Candyvec
+open Candyvec.Std
 
 module R = RigidBodyInfo
 
 type depth = float
+module V = Vector
 
 type separating_type = Edge             (* Edge to edge *)
                        | APlane         (* A plane of the body A *)
                        | BPlane         (* A plane of the body B *)
 
-type separating_axis = separating_type * Candyvec.Vector.t * depth
+type separating_axis = separating_type * V.t * depth
 
 (* TRANSLATE: ある軸上にメッシュを投影した場合の最大値と最小値を取得する *)
 let get_projection axis mesh =
   let vertices = mesh.Mesh.vertices in
 
   Array.fold_left (fun (pmax, pmin) elem ->
-    let projected = Candyvec.Vector.dot elem axis in
+    let projected = V.dot elem axis in
     (max pmax projected, min pmin projected)
   ) (min_float, max_float) vertices
 
@@ -25,11 +26,11 @@ let get_projection axis mesh =
 let breakable_fold ary f init =
   let length = Array.length ary in
   let rec loop index f prev =
-    if index >= length then None
+    let open Sugarpot.Std.Option.Open in
+    if index >= length then Some prev
     else
-      match f prev ary.(index) with
-      | None -> None
-      | Some x -> loop (succ index) f x in
+      f prev ary.(index) >>= loop (succ index) f
+  in
   loop 0 f init
 
 (* TRANSLATE: AとBの間に、sep_axisを分離軸として分離平面が存在するかどうかを調べる *)
@@ -38,11 +39,10 @@ let is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_ax
   | None -> None
   | Some inversed ->
     (* TRANSLATE: Bのローカル座標系からAのローカル座標形への変換行列 *)
-    let trans_a2b = Matrix4.multiply inversed world_a in
+    let trans_a2b = Matrix4.multiply world_a inversed in
 
-    let sep_axisb = Matrix4.mult_vec trans_a2b sep_axis in
-    let offset_vec = Vector.sub (Matrix4.mult_vec world_a sep_axis)
-      (Matrix4.mult_vec world_b sep_axisb) in
+    let sep_axisb = Matrix4.mult_vec trans_a2b sep_axis |> V.normalize in
+    let offset_vec = V.sub sep_axis sep_axisb in
     (* TRANSLATE: shape_bをAのローカル座標系に変換すると、演算負荷が高いため、
        分離軸をBのローカル座標として扱い、取得した値をAのローカル座標系に
        換算することで、演算負荷を抑えることができる。
@@ -57,13 +57,14 @@ let is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_ax
     if d1 >= 0.0 || d2 >= 0.0 then None
     else if d1 < d2 then Some (Vector.invert sep_axis, d2)
     else Some (sep_axis, d1)
+;;
 
 let judge_intersect ~body_a ~body_b =
   let open Candyvec in
   let state_a = body_a.R.state 
   and state_b = body_b.R.state in
   let world_a = Util.world_transform state_a.State.orientation state_a.State.pos 
-  and world_b = Util.world_transform state_b.State.orientation state_a.State.pos in
+  and world_b = Util.world_transform state_b.State.orientation state_b.State.pos in
 
   let shapes_a = body_a.R.collidable.Collidable.shapes
   and shapes_b = body_b.R.collidable.Collidable.shapes in
@@ -94,6 +95,7 @@ let judge_intersect ~body_a ~body_b =
       let first, second = edge.Mesh.Edge.vertex_ids in
       Vector.sub vertices.(second) vertices.(first) in
 
+    let module V = Candyvec.Std.Vector in
     breakable_fold edges_a (fun (styp, axis, dist) edge ->
       let edge_a = edge_to_vec edge vertices_a in
       breakable_fold edges_b (fun (styp, axis, dist) edge ->
@@ -118,8 +120,8 @@ let judge_intersect ~body_a ~body_b =
       (* TRANSLATE: Aの各面法線ベクトル、Bの各面法線ベクトル、各Edgeの外積を
          分離軸として判定する。どこかで分離平面が見付かれば、その時点で判定は終了する。
       *)
-      face_intersect shape_a.Shape.mesh.Mesh.facets shape_a shape_b
-        (APlane, Vector.zero, 0.0) APlane >>=
+      (face_intersect shape_a.Shape.mesh.Mesh.facets shape_a shape_b
+         (APlane, Vector.zero, -. max_float) APlane) >>=
         (fun sep_axis ->
           face_intersect shape_b.Shape.mesh.Mesh.facets shape_a shape_b sep_axis BPlane) >>=
         (fun sep_axis -> edge_intersect shape_a shape_b sep_axis) in

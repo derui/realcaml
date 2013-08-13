@@ -1,6 +1,6 @@
 open Sugarpot.Std.Prelude
 
-type pair = New | Keep
+type pair = New | Keep | Empty
 
 type t = {
   pair_type:pair;
@@ -27,6 +27,6 @@ let make_by_index ~pt ~indexA ~indexB ?contact () =
   }
 
 let empty = {
-  pair_type = New; key = 0L;
-  contact = Contact.empty ; indexA = 0l; indexB = 0l;}
+  pair_type = Empty; key = Int64.max_int;
+  contact = Contact.empty ; indexA = Int32.max_int; indexB = Int32.max_int;}
 

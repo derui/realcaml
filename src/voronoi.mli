@@ -8,10 +8,34 @@
 
 (** type of a voronoi region *)
 type t
-
 type recent_type = Point of Candyvec.Vector.t
                    | Edge of Candyvec.Vector.t * Candyvec.Vector.t
                    | Shape
+
+module Base : sig
+  type t
+  type triangle = Candyvec.Vector.t * Candyvec.Vector.t * Candyvec.Vector.t
+
+  val make_region : triangle -> t list
+(** Make voronoi's regions with vertices of a some triangle.
+    What regions are returned contains six regions, three regions are points and three regions
+    are edges.
+
+    @param triangle A triangle to make regions
+    @return Regions are made with triangle given.
+*)
+
+  val recent_region : region:t -> point:Candyvec.Vector.t -> recent_type
+(** Get type of recent region for the voronoi region given.
+    If this function can not detect region is recent with given point, raise
+    Exception.
+
+    @param region A region to detect region is most recent to given point
+    @param point A point to detect region is most recent to.
+    @return type of region is most recent to given point
+*)
+end
+  
 
 (** Calculate voronoi regions with vertices of a some shape.
     Aligns of vertices needs to be counter clockwise.

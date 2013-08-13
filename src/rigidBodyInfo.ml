@@ -6,13 +6,7 @@ type t = {
   state:State.t;
 }
 
-let get_world_transform {state;_} =
-  let pos = state.State.pos  
-  and orientation = state.State.orientation in
-  let trans_mat = Matrix4.translation pos
-  and orient_mat = Quaternion.to_matrix orientation in
-  Matrix4.multiply trans_mat orient_mat
+let get_world_transform {state;_} = State.to_world_transform state
 
 let pos rbi = rbi.state.State.pos
-let set_pos rbi pos =
-  {rbi with state = {rbi.state with State.pos = pos}}
+let set_pos rbi pos = {rbi with state = {rbi.state with State.pos = pos}}

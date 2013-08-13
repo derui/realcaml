@@ -12,6 +12,7 @@ type t = {
   mutable pair: Pair.t array array;
 }
 
+
 module RI = RigidBodyInfo
 module M = Candyvec.Matrix4
 module V = Candyvec.Vector
@@ -44,13 +45,15 @@ let bodies engine = engine.sweep_prune.SweepPrune.bodies
 let intersect_bodies engine =
   let sp = engine.sweep_prune in
   let max_count = sp.SweepPrune.current_count in
-  let swap = engine.pair_swap in
+  let swap = engine.pair_swap lxor 1 in
   let pair_count = ref 0 in
   let pairs = engine.pair.(swap) in
   let rec intersect_loop sp pairs base_count other_count =
     if base_count >= max_count then pairs
+    else if base_count = other_count then 
+      intersect_loop sp pairs base_count (succ base_count)
     else if other_count >= max_count then
-      intersect_loop sp pairs (succ base_count) (other_count + 2)
+      intersect_loop sp pairs (succ base_count) (base_count + 2)
     else
       (* TRANSLATE: それぞれの衝突判定を行う。 *)
       match SweepPrune.intersect sp base_count other_count with
@@ -68,9 +71,10 @@ let intersect_bodies engine =
 
 (* sort pair array by key that is swapped. *)
 let sort_pair pair =
-  let comp a b = compare a.Pair.key b.Pair.key in
+  let comp a b = Int64.compare a.Pair.key b.Pair.key in
   Array.stable_sort comp pair;
   pair
+;;
 
 (* do broad phase *)
 let broad_phase engine =
@@ -99,13 +103,14 @@ let broad_phase engine =
   engine.pair_swap <- swap;
   engine.pair_count.(swap) <- count;
   engine
+;;
 
 (* Get closest point from given voronoi regions with target point.  *)
 let get_closest_point_with_voronoi mesh vert plane = function
   | Voronoi.Point(point) -> point
   | Voronoi.Edge(edge_point1, edge_point2) ->
     let edge = V.normalize |< V.sub edge_point2 edge_point1 in
-    V.scale ~v:edge ~scale:(V.dot vert edge)
+    V.scale ~v:edge ~scale:(V.dot vert (V.sub vert edge_point1))
   | Voronoi.Shape ->
     let facet = mesh.Mesh.facets |> flip Array.get plane in
     let normal = facet.Mesh.Facet.normal in
@@ -158,6 +163,7 @@ let get_plane_closest_points (axis, dist) body_a body_b trans_mat =
           Array.fold_left (fun contacts vert ->
             let point = get_closest_point_with_voronoi mesh vert index |<
                 Voronoi.recent_of_region vert voronoi_region in
+
             point :: contacts
           ) [] mesh_b.Mesh.vertices
         ) [] body_b.RI.collidable.Collidable.shapes in
@@ -165,7 +171,8 @@ let get_plane_closest_points (axis, dist) body_a body_b trans_mat =
       else ()
     ) mesh.Mesh.facets
   ) shapes;
-  List.map (fun x -> (x, V.norm x)) !contacts
+  List.map (fun x ->
+    (V.normalize x, V.norm x)) !contacts
 ;;
 
 (* TRANSLATE: エッジ同士における最近接点を取得する *)
@@ -195,7 +202,7 @@ let get_edge_closest_points ((axis, dist) : V.t * float)
       ) |< body_b.RI.collidable.Collidable.shapes
     ) mesh.Mesh.edges
   ) shapes;
-  List.map (fun x -> (x, V.norm x)) !contacts
+  List.map (fun x -> (V.normalize x, V.norm x)) !contacts
 ;;
 
 (* TRANSLATE: 二つのbodyにおける最近接点を取得する。 *)
@@ -225,16 +232,16 @@ let update_contact_points bodies ((axis, dist) : V.t * float) (pair : Pair.t) : 
                      pointA = M.mult_vec ~vec:axis ~mat:world_a;
                      pointB = M.mult_vec ~vec:axis ~mat:world_b;
                      normal = axis;
-                     constraints = [||]
+                     constraints = []
                     } in
-    let points_array = new_point :: (Array.to_list contacts.Contact.contact_points) in
+    let points_list = new_point :: contacts.Contact.contact_points in
 
-    if contacts.Contact.contact_num < 4 then
+    if contacts.Contact.contact_num <= 4 then
       let friction = contacts.Contact.friction in
       let module A = Sugarpot.Std.Array in
       {pair with Pair.contact = {
         Contact.contact_num = succ contacts.Contact.contact_num;
-        friction; contact_points = Array.of_list points_array;
+        friction; contact_points = points_list;
        }
       }
     else
@@ -244,9 +251,10 @@ let update_contact_points bodies ((axis, dist) : V.t * float) (pair : Pair.t) : 
           max_point
         else
           point
-      ) new_point points_array in
+      ) new_point points_list in
       let points_without_max = Array.of_list |< List.filter (fun x ->
-        max_dist.ContactPoint.distance != x.ContactPoint.distance) points_array in
+        max_dist.ContactPoint.distance <> x.ContactPoint.distance) points_list in
+      Printf.printf "count : %d\n" (Array.length points_without_max);
       let combi_points = [(points_without_max.(0), points_without_max.(1),
                            points_without_max.(2));
                           (points_without_max.(0), points_without_max.(2),
@@ -272,7 +280,7 @@ let update_contact_points bodies ((axis, dist) : V.t * float) (pair : Pair.t) : 
       let module A = Sugarpot.Std.Array in
       {pair with Pair.contact = {
         Contact.contact_num = contacts.Contact.contact_num;
-        friction; contact_points = [|a;b;c;d|]
+        friction; contact_points = [a;b;c;d]
        }
       }
 ;;
@@ -292,37 +300,43 @@ let narrow_phase engine =
     let open SeparatingAxis in
     match (body_a, body_b) with
     | (None, _) | (_, None) -> failwith "not found one or two of pair"
-    | (Some(body_a), Some(body_b)) ->
+    | (Some body_a, Some body_b) ->
       match is_separate body_a body_b  with
     (* TRANSLATE: APlaneの場合、body Aを基準として判定する。  *)
       | Some (APlane, axis, dist) ->
+        Printf.printf "APlane %f\n" dist;
         let a_to_b = get_coodinate_localization_matrix (axis, dist) body_a body_b in
         Some(get_closest_point (axis, dist) body_a body_b a_to_b)
     (* TRANSLATE: BPlaneの場合、body Bを基準として判定する。  *)
       | Some (BPlane, axis, dist) ->
+        print_string "BPlane \n";
         let a_to_b = get_coodinate_localization_matrix (axis, dist) body_a body_b in
         Some(get_closest_point (axis, dist) body_b body_a a_to_b)
     (* TRANSLATE: Edgeの場合、body Aを基準として判定する。  *)
       | Some (Edge, axis, dist) ->
+        Printf.printf " Edge %s\n" (V.to_string axis);
         let a_to_b = get_coodinate_localization_matrix (axis, dist) body_a body_b in
         Some(get_closest_point (axis, dist) body_a body_b a_to_b)
     (* TRANSLATE: 分離平面が存在する場合には、このペアに対して何も行わない *)
-      | None -> None in
+      | None -> print_string "None"; None in
 
   let updated_pair = Array.mapi (fun index pair ->
-    match solve_contact_point index pair with
-    | None -> pair
-    | Some((axis, dist)) ->
-    (* TRANSLATE: ここで取得した衝突点は、すべて剛体Aを基準にとったものとなるため、
-       一度ワールド座標系に衝突点を変換する。
-    *)
-    match bodies.(Int32.to_int pair.Pair.indexA) with
-    | None -> failwith "body A not found"
-    | Some(body_a) ->
-      let to_world = RI.get_world_transform body_a |> simple_inverse in
-      let axis = M.mult_vec ~mat:to_world ~vec:axis in
+    match pair.Pair.pair_type with
+    | Pair.Empty -> pair
+    | _ -> 
+      match solve_contact_point index pair with
+      | None -> pair
+      | Some (axis, dist) ->
+        (* TRANSLATE: ここで取得した衝突点は、すべて剛体Aを基準にとったものとなるため、
+           一度ワールド座標系に衝突点を変換する。
+        *)
+        match bodies.(Int32.to_int pair.Pair.indexA) with
+        | None -> failwith "body A not found"
+        | Some(body_a) ->
+          let to_world = RI.get_world_transform body_a |> simple_inverse in
+          let axis = M.mult_vec ~mat:to_world ~vec:axis in
 
-      update_contact_points bodies (axis, dist) pair
+          update_contact_points bodies (axis, dist) pair
   ) current_pair in
   engine.pair.(engine.pair_swap) <- updated_pair;
   engine
@@ -339,23 +353,29 @@ let solve_constraints engine =
   let solver_bodies = Array.map setup_solver bodies in
   let solver_set ind = solver_bodies.(Int32.to_int ind) in
   let update_contact pair =
-    match (solver_set pair.Pair.indexA, solver_set pair.Pair.indexB) with
-    | ((None, _) | (_, None)) -> pair
-    | (Some(solv_a), Some(solv_b)) ->
-      let new_contact = ConstraintSolver.setup_constraint solv_a solv_b
-        pair.Pair.contact pair.Pair.pair_type engine.engine_option in
-      {pair with Pair.contact = new_contact} in
+    match pair.Pair.pair_type with
+    | Pair.Empty -> pair
+    | _ -> 
+      match (solver_set pair.Pair.indexA, solver_set pair.Pair.indexB) with
+      | ((None, _) | (_, None)) -> pair
+      | (Some(solv_a), Some(solv_b)) ->
+        let new_contact = ConstraintSolver.setup_constraint solv_a solv_b
+          pair.Pair.contact pair.Pair.pair_type engine.engine_option in
+        {pair with Pair.contact = new_contact} in
 
   let do_solve pair =
-    match (solver_set pair.Pair.indexA, solver_set pair.Pair.indexB) with
-    | ((None, _) | (_, None)) -> ()
-    | (Some(solv_a), Some(solv_b)) ->
-      let ((bodyA, solverA), (bodyB, solverB)) =
-        ConstraintSolver.solve solv_a solv_b pair.Pair.contact engine.engine_option in
-      let indA = Int32.to_int pair.Pair.indexA
-      and indB = Int32.to_int pair.Pair.indexB in
-      solver_bodies.(indA) <- Some(bodyA, solverA);
-      solver_bodies.(indB) <- Some(bodyB, solverB) in
+    match pair.Pair.pair_type with
+    | Pair.Empty -> ()
+    | _ -> 
+      match (solver_set pair.Pair.indexA, solver_set pair.Pair.indexB) with
+      | ((None, _) | (_, None)) -> ()
+      | (Some(solv_a), Some(solv_b)) ->
+        let ((bodyA, solverA), (bodyB, solverB)) =
+          ConstraintSolver.solve solv_a solv_b pair.Pair.contact engine.engine_option in
+        let indA = Int32.to_int pair.Pair.indexA
+        and indB = Int32.to_int pair.Pair.indexB in
+        solver_bodies.(indA) <- Some(bodyA, solverA);
+        solver_bodies.(indB) <- Some(bodyB, solverB) in
 
   let update_velocity ind body =
     match body with
@@ -363,12 +383,14 @@ let solve_constraints engine =
     | Some((body,  solver)) ->
       let state = body.RI.state in
       let module S = ConstraintSolver.SolverBody in
+      Printf.printf "solver delta : %s : %s\n"
+       (V.to_string state.State.linear_velocity) (V.to_string solver.S.delta_linear_velocity);
       let linear = V.add state.State.linear_velocity solver.S.delta_linear_velocity
       and angular = V.add state.State.angular_velocity solver.S.delta_angular_velocity in
       let state =
         {state with State.linear_velocity = linear;
           angular_velocity = angular} in
-        Some({body with RI.state = state}) in
+      Some({body with RI.state = state}) in
 
   (* TRANSLATE 各pairについて、拘束のセットアップを行う *)
   let current_pair = Array.map update_contact current_pair in
@@ -391,23 +413,27 @@ let get_current_pair engine =
 let map_bodies ~f ary =
   Array.map (function
   | None -> None
-  | Some(sp) -> Some(f sp)
+  | Some sp ->
+    match sp.RI.state.State.motion_type with
+    | State.Active -> Some(f sp)
+    | State.Static -> Some sp
   ) ary
 ;;
 
 let update_bodies engine =
-(* TRANSLATE: 算出した速度を、各剛体に反映する' *)
+  (* TRANSLATE: 算出した速度を、各剛体に反映する' *)
   let time_step = engine.engine_option.EO.time_step
   and bodies = engine.sweep_prune.SweepPrune.bodies  in
 
   let calc_delta_orientation angular time_step =
     let angular = V.scale ~v:angular ~scale:time_step in
     let axis = V.scale ~v:angular ~scale:(1.0 /. V.norm angular) in
-    Q.make ~angle:(cos |< V.norm angular) ~vector:(V.scale ~v:axis ~scale:(sin |< V.norm angular)) in
+    Q.make ~angle:(cos |< V.norm angular) ~vec:(V.scale ~v:axis ~scale:(sin |< V.norm angular)) in
 
   let update_state_position ri =
     let state = ri.RI.state in
     let pos = state.State.pos in
+    Printf.printf "%s : %s \n" (V.to_string pos) (V.to_string state.State.linear_velocity);
     let state = {state with State.pos = V.add pos state.State.linear_velocity} in
     let delta = calc_delta_orientation state.State.angular_velocity time_step in
     let state = {state with State.orientation = Q.multiply state.State.orientation delta} in
@@ -423,16 +449,16 @@ let apply_gravity engine =
   let bodies = engine.sweep_prune.SweepPrune.bodies in
   let updated =
     Array.map (fun body ->
-    match body with
-    | None -> None
-    | Some body ->
-      let mass = body.RI.body.RigidBody.mass in
-      let gravity = engine.engine_option.EO.gravity
-      and time_step = engine.engine_option.EO.time_step in
-      let force = V.scale ~v:gravity ~scale:mass in
-      let ri_body, state = Force.apply_force ~body:body.RI.body ~state:body.RI.state
-              ~force ~torque:V.zero ~time_step in
-      Some ({body with RI.state = state; RI.body = ri_body})
+      match body with
+      | None -> None
+      | Some body ->
+        let mass = body.RI.body.RigidBody.mass in
+        let gravity = engine.engine_option.EO.gravity
+        and time_step = engine.engine_option.EO.time_step in
+        let force = V.scale ~v:gravity ~scale:mass in
+        let ri_body, state = Force.apply_force ~body:body.RI.body ~state:body.RI.state
+          ~force ~torque:V.zero ~time_step in
+        Some ({body with RI.state = state; RI.body = ri_body})
     ) bodies in
   {engine with sweep_prune = {
     engine.sweep_prune with SweepPrune.bodies = updated;
