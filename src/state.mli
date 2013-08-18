@@ -9,10 +9,10 @@ type motion = Active | Static
 
 (** Types including some statements of rigid body. *)
 type t = {
-  pos:Candyvec.Vector.t;
-  orientation:Candyvec.Quaternion.t;
-  linear_velocity:Candyvec.Vector.t;
-  angular_velocity:Candyvec.Vector.t;
+  pos:Candyvec.Std.Vector.t;
+  orientation:Candyvec.Std.Quaternion.t;
+  linear_velocity:Candyvec.Std.Vector.t;
+  angular_velocity:Candyvec.Std.Vector.t;
   motion_type:motion;
 }
 
@@ -20,4 +20,4 @@ type t = {
 val empty: t
 
 (** Get a transform matrix to convert world coodinate. *)
-val to_world_transform : t -> Candyvec.Matrix4.t
+val to_world_transform : t -> Candyvec.Std.Matrix4.t

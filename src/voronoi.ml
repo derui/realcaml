@@ -41,14 +41,14 @@ module Base = struct
     | (true, true, _) -> (e1, e2)
     | (_, true, true) -> (e2, e3)
     | (true, _, true) -> (e3, e1)
+    | _ -> failwith "matching point of edge not found"
   ;;
 
   (* TRANSLATE: 点のボロノイ領域を求める *)
-  let make_point_region (e1, e2, e3) point =
+  let make_point_region (e1, e2, e3) normal point =
     let e1, e2 = point_of_contained_edge point (e1, e2, e3) in
-    match (make_edge_region e1, make_edge_region e2) with
-    | (REdge (_, normal1, _), REdge (_, normal2, _)) ->
-      RPoint (point, normal1, normal2, normal)
+    match (make_edge_region e1 normal, make_edge_region e2 normal) with
+    | (REdge (_, normal1, _), REdge (_, normal2, _)) -> RPoint (point, normal1, normal2, normal)
     | _ -> failwith "error"
   ;;
 
@@ -60,7 +60,7 @@ module Base = struct
     let open Sugarpot.Std.Prelude in
     let edge_regions = List.map (flip make_edge_region normal) edges in
     let edges = ((v1, v2), (v2, v3), (v3, v1)) in
-    let point_regions = List.map (make_point_region edges) [v1;v2;v3] in
+    let point_regions = List.map (make_point_region edges normal) [v1;v2;v3] in
     List.concat [edge_regions; point_regions]
   ;;
 
@@ -72,10 +72,7 @@ let voronoi_region mesh facet =
   (* TRANSLATE: 三角形におけるボロノイ領域を求める *)
   let vertices = mesh.Mesh.vertices in
   let facet = mesh.Mesh.facets |> flip Array.get facet in
-  let edges = mesh.Mesh.edges in
-  let v1, v2, v3 = facet.F.vertex_ids 
-  and e1, e2, e3 = facet.F.edge_ids
-  and normal = facet.F.normal in
+  let v1, v2, v3 = facet.F.vertex_ids in
 
   (* TRANSLATE: 三角形のボロノイ領域になる6個のボロノイ領域を返却する *)
   Base.make_region (vertices.(v1), vertices.(v2), vertices.(v3))
@@ -99,14 +96,14 @@ let recent_of_region target voronois =
   (* TRANSLATE: 投影点について、それぞれのエッジの法線について、表側なのか裏側なのかを判定する *)
   let is_front normal base =
     let base_point = V.sub project base in
-    let dot = V.dot mbase_point normal in
+    let dot = V.dot base_point normal in
     dot >= 0.0 in
   let is_back normal base = not |< is_front normal base in
 
   (* TRANSLATE: 各エッジの面について裏側に位置する場合、最近接点はその点となる *)
   let is_contain_shape =
     List.for_all (function
-    | REdge ((b1, b2), enormal, normal) -> is_back target enormal b1
+    | REdge ((b1, b2), enormal, normal) -> is_back target b1
     | _ -> failwith "is_contain_shape do not have not REdge one"
     ) voronoi_edge in
   if is_contain_shape then Shape
@@ -125,7 +122,7 @@ let recent_of_region target voronois =
       | RPoint (point, enor1, enor2, normal) ->
         let side_nor1 = V.normalize (V.cross enor1 normal)
         and side_nor2 = V.normalize (V.cross normal enor2) in
-        (is_front target side_nor1 point) && (is_front target side_nor2 point)
+        (is_front side_nor1 target) && (is_front side_nor2 target)
     ) voronois in
     match recent with
     | [] -> failwith "what point is contained in the voronoi region have to be one or more region"
