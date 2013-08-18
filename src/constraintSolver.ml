@@ -20,7 +20,7 @@ module SolverBody = struct
 
   let empty = {delta_linear_velocity = V.zero;
             delta_angular_velocity = V.zero;
-            orientation = Q.identity;
+            orientation = Q.identity ();
             inertia_inv = Candyvec.Std.Matrix3.identity ();
             mass_inv = 0.0;
            }
@@ -34,7 +34,7 @@ module SolverBody = struct
         let open Sugarpot.Std.Prelude in
         let transposed = Candyvec.Std.Matrix3.transpose body.RigidBody.inertia in
         (M.multiply (M.multiply orient_mat
-                       (Candyvec.Std.Matrix.to_4x4 transposed))
+                       (Candyvec.Std.MatrixUtil.to_4x4 transposed))
         (M.transpose orient_mat), 1.0 /. body.RigidBody.mass) in
 
     {delta_linear_velocity = V.zero;
@@ -108,17 +108,12 @@ let solve (bodyA, solverA) (bodyB, solverB) contact opt =
     let jac = ct.Constraint.jac_diag_inv
     and axis = ct.Constraint.axis in
     let impulse = impulse -. jac *. (V.dot axis (V.sub va vb)) in
-    Printf.printf "calculating impulse : %s %s\n" (V.to_string va) (V.to_string vb);
-    Printf.printf "calculating impulse : %s %f %f\n"
-      (V.to_string (V.sub va vb)) ct.Constraint.jac_diag_inv impulse;
     max impulse ct.Constraint.lower_limit |> min ct.Constraint.upper_limit in
 
   let update_solver impulse solver ct r operate =
     let scale = impulse *. solver.SolverBody.mass_inv in
     let inertia = M3.ratio solver.SolverBody.inertia_inv impulse in
     let cross = V.cross r ct.Constraint.axis in
-    Printf.printf "constraint : %s : %s\n" (V.to_string ct.Constraint.axis) (V.to_string cross);
-    Printf.printf "inertia : %s\n" (Candyvec.Std.Matrix3.to_string inertia);
     let calc_vec f =
       {solver with SolverBody.delta_linear_velocity =
           f solver.SolverBody.delta_linear_velocity
@@ -144,12 +139,9 @@ let solve (bodyA, solverA) (bodyB, solverB) contact opt =
     safe_hd cp.ContactPoint.constraints >>=
       (fun ctraint -> 
         let delta_impulse = ctraint.Constraint.rhs in
-        Printf.printf "solve : %s :%s \n" (V.to_string rA) (V.to_string rB);
         let delta_velocity_a = V.add solverA.S.delta_linear_velocity (V.cross solverA.S.delta_angular_velocity rA)
         and delta_velocity_b = V.add solverB.S.delta_linear_velocity (V.cross solverB.S.delta_angular_velocity rB) in
-        Printf.printf "impulse > %s : %s \n" (V.to_string delta_velocity_a) (V.to_string delta_velocity_b);
         let delta_impulse = calc_delta delta_impulse ctraint delta_velocity_a delta_velocity_b in
-        Printf.printf "impulse finally : %f\n" delta_impulse;
         let solverA = update_solver delta_impulse solverA ctraint rA `Add
         and solverB = update_solver delta_impulse solverB ctraint rB `Minus in
         return (solverA, solverB)) in

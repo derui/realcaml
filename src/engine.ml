@@ -254,7 +254,6 @@ let update_contact_points bodies ((axis, dist) : V.t * float) (pair : Pair.t) : 
       ) new_point points_list in
       let points_without_max = Array.of_list |< List.filter (fun x ->
         max_dist.ContactPoint.distance <> x.ContactPoint.distance) points_list in
-      Printf.printf "count : %d\n" (Array.length points_without_max);
       let combi_points = [(points_without_max.(0), points_without_max.(1),
                            points_without_max.(2));
                           (points_without_max.(0), points_without_max.(2),
@@ -304,7 +303,6 @@ let narrow_phase engine =
       match is_separate body_a body_b  with
     (* TRANSLATE: APlaneの場合、body Aを基準として判定する。  *)
       | Some (APlane, axis, dist) ->
-        Printf.printf "APlane %f\n" dist;
         let a_to_b = get_coodinate_localization_matrix (axis, dist) body_a body_b in
         Some(get_closest_point (axis, dist) body_a body_b a_to_b)
     (* TRANSLATE: BPlaneの場合、body Bを基準として判定する。  *)
@@ -314,7 +312,6 @@ let narrow_phase engine =
         Some(get_closest_point (axis, dist) body_b body_a a_to_b)
     (* TRANSLATE: Edgeの場合、body Aを基準として判定する。  *)
       | Some (Edge, axis, dist) ->
-        Printf.printf " Edge %s\n" (V.to_string axis);
         let a_to_b = get_coodinate_localization_matrix (axis, dist) body_a body_b in
         Some(get_closest_point (axis, dist) body_a body_b a_to_b)
     (* TRANSLATE: 分離平面が存在する場合には、このペアに対して何も行わない *)
@@ -383,8 +380,6 @@ let solve_constraints engine =
     | Some((body,  solver)) ->
       let state = body.RI.state in
       let module S = ConstraintSolver.SolverBody in
-      Printf.printf "solver delta : %s : %s\n"
-       (V.to_string state.State.linear_velocity) (V.to_string solver.S.delta_linear_velocity);
       let linear = V.add state.State.linear_velocity solver.S.delta_linear_velocity
       and angular = V.add state.State.angular_velocity solver.S.delta_angular_velocity in
       let state =
@@ -428,12 +423,11 @@ let update_bodies engine =
   let calc_delta_orientation angular time_step =
     let angular = V.scale ~v:angular ~scale:time_step in
     let axis = V.scale ~v:angular ~scale:(1.0 /. V.norm angular) in
-    Q.make ~angle:(cos |< V.norm angular) ~vec:(V.scale ~v:axis ~scale:(sin |< V.norm angular)) in
+    Q.make ~angle:(cos |< V.norm angular) ~vector:(V.scale ~v:axis ~scale:(sin |< V.norm angular)) in
 
   let update_state_position ri =
     let state = ri.RI.state in
     let pos = state.State.pos in
-    Printf.printf "%s : %s \n" (V.to_string pos) (V.to_string state.State.linear_velocity);
     let state = {state with State.pos = V.add pos state.State.linear_velocity} in
     let delta = calc_delta_orientation state.State.angular_velocity time_step in
     let state = {state with State.orientation = Q.multiply state.State.orientation delta} in

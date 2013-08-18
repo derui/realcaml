@@ -11,7 +11,7 @@ type t = {
 }
 
 let empty =
-  {pos = Vector.zero ; orientation = Quaternion.identity;
+  {pos = Vector.zero ; orientation = Quaternion.identity ();
    linear_velocity = Vector.zero;
    angular_velocity = Vector.zero;
    motion_type = Static}
