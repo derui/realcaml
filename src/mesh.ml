@@ -48,9 +48,9 @@ type edge_buffer = {
 
 (* TRANSLATE: 渡されたエッジが成す平面が、縮退面であるかどうかを判別する *)
 let is_degenerate vertices ((aa, ab), (ba, bb), (ca, cb)) =
-  let edge_a = V.sub vertices.(ab) vertices.(aa)
-  and edge_b = V.sub vertices.(bb) vertices.(ba)
-  and edge_c = V.sub vertices.(cb) vertices.(ca) in
+  let edge_a = V.normalize (V.sub vertices.(ab) vertices.(aa))
+  and edge_b = V.normalize (V.sub vertices.(bb) vertices.(ba))
+  and edge_c = V.normalize (V.sub vertices.(cb) vertices.(ca)) in
   if V.dot edge_a (V.invert edge_c) = 1.0 then true
   else if V.dot edge_b (V.invert edge_a) = 1.0 then true
   else if V.dot edge_c (V.invert edge_b) = 1.0 then true
@@ -68,6 +68,7 @@ let array_find ary f =
 
 
 let edges_of_face (ai, bi, ci) = ((ai, bi), (bi, ci), (ci, ai))
+;;
 
 let convert_edges vertices faces =
   let edge_buf = ref M.empty in
@@ -88,43 +89,75 @@ let convert_edges vertices faces =
   Array.iteri (fun i e ->
     edge_buf := register_face_edges !edge_buf i (edges_of_face e)) faces;
   !edge_buf
+;;
+
+let equal_edge (e1, e2) (e21, e22) =
+  (e1 = e21 && e2 = e22) || (e2 = e21 && e1 = e22)
+;; 
+
+(* Get faces what include the edge is given *)
+let get_faces_contain_edge faces edge =
+  List.filter (fun face ->
+    let ea, eb, ec = edges_of_face face in
+    List.for_all (equal_edge edge) [ea;eb;ec]
+  ) faces 
+;;
 
 let convert ~vertices ~faces =
   (* TODO 縮退面を事前に削除する。 *)
-  let faces = Array.of_list |< List.filter (fun e ->
+  let faces = List.filter (fun e ->
     let (ea, eb, ec) = edges_of_face e in
     not (is_degenerate vertices (ea, eb, ec))
   ) (Array.to_list faces) in
+  let open Sugarpot.Std.List in
+  let face_ids = range_int (0, List.length faces - 1) in
+  let faces = zip (fun i d -> (i, d)) face_ids faces in
 
-  let edge_buf = convert_edges vertices faces in
-  (* TODO 作成したmapを、Edgeのリストとして作成する。この時点では、すべてのedgeを凸メッシュとして
-     作成する。*)
-  let edge_buf = Array.of_list |< M.fold edge_buf ~f:(fun ~key ~data l ->
-    {Edge.edge_type = Edge.Convex; vertex_ids = (List.nth data.vertex_indices 0, List.nth data.vertex_indices 1);
-     face_ids = data.faces
-    } :: l
-  ) ~init:[] in
+  let edge_buf = List.fold_left (fun buf (i, face) ->
+    let ea,eb,ec = edges_of_face face in
+    let register_face_edge buf edge = 
+      let swaped_edge = let (a, b) = edge in (b, a) in
+      match (M.find buf edge, M.find buf swaped_edge) with
+      | (None, None) ->
+        M.add buf ~key:edge ~data:{
+          Edge.edge_type = Edge.Convex;
+          vertex_ids = edge;
+          face_ids = [i];}
+      | (Some e, _) | (_, Some e) ->
+        M.add buf ~key:edge ~data:{e with Edge.face_ids = i :: e.Edge.face_ids} in
+    List.fold_left register_face_edge buf [ea; eb; ec]
+  ) M.empty faces in
+  let edge_ary = Array.of_list (M.data edge_buf) in
+
   (* TODO faceの配列を、Faceの配列として作成する。Edgeの配列はすでに用意されているので、
      配列の内部から、一致するindexを取得して利用する。
   *)
-  let faces = Array.map (fun (va, vb, vc) ->
-    let (ea, eb, ec) = edges_of_face (va, vb, vc) in
-    let edge_detect (origin_a, origin_b) edge =
-      let (ea, eb) = edge.Edge.vertex_ids in
-      if origin_a = ea && origin_b = eb then true
-      else if origin_a = eb && origin_b = ea then true
+  let faces = List.map (fun (index, face) ->
+    let (ea, eb, ec) = edges_of_face face in
+
+    let edge_detect base_edge edge =
+      let e1, e2 = base_edge in
+      let swapped = (e2, e1) in
+      let key = edge.Edge.vertex_ids in
+      if (equal_edge base_edge key || equal_edge swapped key) then
+        match M.find edge_buf key with
+        | None -> false
+        | Some e ->
+          let ids = e.Edge.face_ids in
+          List.exists ((=) index) ids
       else false in
-    let ea = array_find edge_buf |< edge_detect ea
-    and eb = array_find edge_buf |< edge_detect eb
-    and ec = array_find edge_buf |< edge_detect ec in
+    let ea = array_find edge_ary |< edge_detect ea
+    and eb = array_find edge_ary |< edge_detect eb
+    and ec = array_find edge_ary |< edge_detect ec in
     match (ea, eb, ec) with
     | (None,_,_) | (_,None,_) | (_,_,None) -> failwith "not found some edge of face"
     | (Some ea, Some eb, Some ec) ->
+      let va, vb, vc = face in
       let normal = V.normalize |< V.cross (V.sub vertices.(vb) vertices.(va))
         (V.sub vertices.(vc) vertices.(va)) in
       {Facet.vertex_ids = (va, vb, vc); edge_ids = (ea, eb, ec);normal}
   ) faces in
-  {vertices = vertices; edges = edge_buf; facets = faces;}
+  {vertices = vertices; edges = edge_ary; facets = Array.of_list faces;}
 ;;
 
 let transform_vertices mesh mat =

@@ -91,9 +91,9 @@ FILES[] = $(removesuffix $(ls *ml))
 
 TARGET = $(OCamlProgram realcamel_tests, $(removesuffix .ml, $(ls *.ml)))
 
-.DEFAULT: $(TARGET)
+.DEFAULT: all $(TARGET) 
 
-test:
+test: all $(TARGET)
 	./realcamel_tests
 
 clean:
