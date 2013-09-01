@@ -20,7 +20,7 @@ module SolverBody = struct
 
   let empty = {delta_linear_velocity = V.zero;
             delta_angular_velocity = V.zero;
-            orientation = Q.identity ();
+            orientation = Q.identity;
             inertia_inv = Candyvec.Std.Matrix3.identity ();
             mass_inv = 0.0;
            }

@@ -423,7 +423,7 @@ let update_bodies engine =
   let calc_delta_orientation angular time_step =
     let angular = V.scale ~v:angular ~scale:time_step in
     let axis = V.scale ~v:angular ~scale:(1.0 /. V.norm angular) in
-    Q.make ~angle:(cos |< V.norm angular) ~vector:(V.scale ~v:axis ~scale:(sin |< V.norm angular)) in
+    Q.make ~angle:(cos |< V.norm angular) ~vec:(V.scale ~v:axis ~scale:(sin |< V.norm angular)) in
 
   let update_state_position ri =
     let state = ri.RI.state in
