@@ -16,6 +16,10 @@ module Base : sig
   type t
   type triangle = Candyvec.Vector.t * Candyvec.Vector.t * Candyvec.Vector.t
 
+  val projection_point : base:Candyvec.Vector.t -> normal:Candyvec.Vector.t ->
+    point:Candyvec.Vector.t -> Candyvec.Vector.t
+  (** Get vector projected on the point is contained the triangle. *)
+
   val make_region : triangle -> t list
   (** Make voronoi's regions with vertices of a some triangle.
       What regions are returned contains six regions, three regions are points and three regions

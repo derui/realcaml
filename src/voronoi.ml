@@ -21,13 +21,14 @@ type recent_type = Point of V.t
                    | Edge of V.t * V.t
                    | Shape
 
+
 module Base = struct
   type t = region_type
   type triangle = V.t * V.t * V.t
 
   (* TRANSLATE : エッジと面の法線から、エッジのボロノイ領域を取得する *)
   let make_edge_region (v1, v2) normal =
-    let edge_normal = V.cross normal (V.sub v2 v1) in
+    let edge_normal = V.cross (V.sub v2 v1) normal in
     REdge ((v1, v2), edge_normal, normal)
   ;;
 
@@ -48,7 +49,8 @@ module Base = struct
   let make_point_region (e1, e2, e3) normal point =
     let e1, e2 = point_of_contained_edge point (e1, e2, e3) in
     match (make_edge_region e1 normal, make_edge_region e2 normal) with
-    | (REdge (_, normal1, _), REdge (_, normal2, _)) -> RPoint (point, normal1, normal2, normal)
+    | (REdge (_, normal1, _), REdge (_, normal2, _)) ->
+      RPoint (point, normal1, normal2, normal)
     | _ -> failwith "error"
   ;;
 
@@ -64,8 +66,65 @@ module Base = struct
     List.concat [edge_regions; point_regions]
   ;;
 
+  (* TRANSLATE: ある点を、法線ベクトルの面上に投影する *)
+  let projection_point ~base ~normal ~point =
+    let subbed = V.sub point base in
+    let crossed = V.normalize (V.cross normal subbed) in
+    let crossed_with_crossed = V.normalize (V.cross normal crossed) in
+    let dotted = V.dot subbed crossed_with_crossed in
+    V.scale ~scale:dotted ~v:(V.normalize crossed_with_crossed)
+  ;;
 
-  let recent_region ~region ~point = failwith "not implements yet"
+  let is_contain edge point = V.dot point edge >= 0.0
+  ;;
+
+  (* translate: エッジのボロノイ領域に含まれるかどうかを返却する *)
+  let contain_region_for_edge edge point =
+    match edge with
+    | (REdge((e1, e2), enormal, _)) -> 
+      let open Sugarpot.Std.List in
+      let edge1 = V.normalize (V.sub e2 e1)
+      and edge2 = V.normalize (V.sub e1 e2)
+      and base1 = V.sub point e1
+      and base2 = V.sub point e2 in
+      List.for_all id
+        [is_contain edge1 base1; is_contain edge2 base2; is_contain enormal base1]
+    | _ -> failwith "contain_region_for_edge can only apply to REdge"
+  ;;
+
+  let contain_region_for_point p point =
+    match p with
+    | RPoint (base, e1, e2, normal) ->
+      let base = V.sub point base in
+      let is_contain edge = is_contain edge base in
+      is_contain e1 && is_contain e2
+    | _ -> failwith "contain_region_for_point can only apply to RPoint"
+  ;;
+  
+  let recent_region ~region ~point =
+    let is_contain_shape =
+      List.for_all (function
+      | REdge ((e1, e2), enormal, snormal) -> 
+          let projected = projection_point ~base:e1 ~normal:snormal ~point in
+          (V.dot projected enormal) < 0.0
+      | _ -> false
+      ) region in
+
+    if is_contain_shape then Shape
+    else
+      let calculated = List.filter (fun current ->
+        match current with
+        | REdge _ -> contain_region_for_edge current point
+        | RPoint _ -> contain_region_for_point current point
+      ) region in
+      match calculated with
+      | x :: _ ->
+        begin match x with
+        | REdge ((e1, e2), _, _) -> Edge (e1, e2)
+        | RPoint (p, _, _, _) -> Point p
+        end
+      | _ -> failwith "recent region not found..."
+  ;;
 end
 
 let voronoi_region mesh facet =
@@ -78,53 +137,6 @@ let voronoi_region mesh facet =
   Base.make_region (vertices.(v1), vertices.(v2), vertices.(v3))
 ;;
 
-(* TRANSLATE: ある点を、法線ベクトルの面上に投影する *)
-let projection_point target normal vec =
-  let dotted = V.dot (V.sub target vec) normal in
-  V.sub target (V.scale ~scale:dotted ~v:normal)
-
 (* TRANSLATE: 対象が、あるボロノイ領域における最近接領域の種類を取得する *)
 let recent_of_region target voronois =
-  let point, normal = match voronois with
-    | [] -> failwith "voronoi regions has to have one or more region at least"
-    | RPoint (v,_, _, normal) :: _ -> (v, normal)
-    | REdge ((v, _), _, normal) :: _ -> (v, normal) in
-  (* TRANSLATE: ここで、shapeの面に点を投影する *)
-  let project = projection_point target  normal point in
-  let voronoi_edge = List.filter (function REdge _ -> true | _ -> false) voronois in
-
-  (* TRANSLATE: 投影点について、それぞれのエッジの法線について、表側なのか裏側なのかを判定する *)
-  let is_front normal base =
-    let base_point = V.sub project base in
-    let dot = V.dot base_point normal in
-    dot >= 0.0 in
-  let is_back normal base = not |< is_front normal base in
-
-  (* TRANSLATE: 各エッジの面について裏側に位置する場合、最近接点はその点となる *)
-  let is_contain_shape =
-    List.for_all (function
-    | REdge ((b1, b2), enormal, normal) -> is_back target b1
-    | _ -> failwith "is_contain_shape do not have not REdge one"
-    ) voronoi_edge in
-  if is_contain_shape then Shape
-  else
-    (* TRANSLATE: 面ではない場合、エッジか頂点が最近接点となるため、それぞれのボロノイ領域において、すべての面に
-       対して表側に位置するボロノイ領域が、最近接点を含む領域となる
-    *)
-    let recent = List.filter (fun x ->
-      match x with
-      | REdge ((ebegin, eend), enor, nor) ->
-        let side_nor1 = V.normalize (V.sub eend ebegin) in
-        let side_nor2 = V.invert side_nor1 in
-        (is_front side_nor1 ebegin) &&
-          (is_front side_nor2 eend)
-
-      | RPoint (point, enor1, enor2, normal) ->
-        let side_nor1 = V.normalize (V.cross enor1 normal)
-        and side_nor2 = V.normalize (V.cross normal enor2) in
-        (is_front side_nor1 target) && (is_front side_nor2 target)
-    ) voronois in
-    match recent with
-    | [] -> failwith "what point is contained in the voronoi region have to be one or more region"
-    | REdge ((ebegin, eend), _, _) :: _ -> Edge (ebegin, eend)
-    | RPoint (point, _, _, _) :: _ -> Point point
+  Base.recent_region ~region:voronois ~point:target
