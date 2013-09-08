@@ -15,6 +15,29 @@ type separating_type = Edge             (* Edge to edge *)
 
 type separating_axis = separating_type * Candyvec.Vector.t * depth
 
+type mesh_info = Mesh.t * Candyvec.Std.Matrix4.t
+
+(** A Module what is provided base functions for SeparationAxis module. *)
+module Base : sig
+  val get_maximum_range : Candyvec.Std.Vector.t -> Candyvec.Std.Vector.t array -> float * float
+  (** Get minimum and maximum result by dotted vector.
+      @return (maximum, minimum)
+  *)
+end
+
+
+val is_separate_axis : info_a:mesh_info -> info_b:mesh_info -> sep_axis:Candyvec.Std.Vector.t ->
+  (Candyvec.Std.Vector.t * float) option
+(** What checking separated to between two meshes are based on separate axis.
+
+    Notice, sep_axis is located on the coodinate on the info_a local coodinate.
+
+    @param info_a a mesh and world transform matrix to check separating with info_b.
+    @param info_b a mesh and world transform matrix to check separating with info_a.
+    @param sep_axis a separate axis to check separating two meshes.
+*)
+
+val judge_intersect: body_a:RigidBodyInfo.t -> body_b:RigidBodyInfo.t -> separating_axis option
 (** Judge each meshes separeted or not. This funciton is based on
     separating axis theorem.
     Judging separation on the separating axis theorem targeted convex mesh is
@@ -24,4 +47,3 @@ type separating_axis = separating_type * Candyvec.Vector.t * depth
     @param mesh_b a mesh to check separation each meshes.
     @return separating axis and penetrate depth if meshes are not separation, or return None.
 *)
-val judge_intersect: body_a:RigidBodyInfo.t -> body_b:RigidBodyInfo.t -> separating_axis option

@@ -6,6 +6,5 @@ let apply_force ~body ~state ~force ~torque ~time_step =
   let delta_velocity = V.scale ~v:delta_accel ~scale:time_step in
   (* TRANSLATE: オイラー陽解法を利用する *)
   let velocity = state.State.linear_velocity in
-  let delta_velocity =  V.scale ~v:delta_velocity ~scale:time_step in
   let new_velocity = V.add velocity delta_velocity in
   (body, {state with State.linear_velocity = new_velocity})
