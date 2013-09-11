@@ -20,6 +20,15 @@ module Base = struct
       let projected = V.dot elem axis in
       (max pmax projected, min pmin projected)
     ) (min_float, max_float) vertices
+
+  let detect_separation sep_axis (amax, amin) (bmax, bmin) =
+    let d1 = amin -. bmax
+    and d2 = bmin -. amax in
+
+    if d1 >= 0.0 || d2 >= 0.0 then None
+    else if d1 < d2 then Some (Vector.invert sep_axis, d2)
+    else Some (sep_axis, d1)
+    
 end
 
 (* TRANSLATE: Noneを返した時点で終了するArray.fold_left *)
@@ -51,12 +60,7 @@ let is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_ax
     let (amax, amin) = Base.get_maximum_range sep_axis mesh_a.Mesh.vertices
     and (bmax, bmin) = Base.get_maximum_range sep_axisb mesh_b.Mesh.vertices in
     let (bmax, bmin) = (bmax +. offset, bmin +. offset) in
-    let d1 = amin -. bmax
-    and d2 = bmin -. amax in
-
-    if d1 >= 0.0 || d2 >= 0.0 then None
-    else if d1 < d2 then Some (Vector.invert sep_axis, d2)
-    else Some (sep_axis, d1)
+    Base.detect_separation sep_axis (amax, amin) (bmax, bmin)
 
 (* TRANSLATE: 各面法線を分離軸として判定する *)
 let face_intersect (shape_a, world_a) (shape_b, world_b) (styp, axis, dist) septype =

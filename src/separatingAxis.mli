@@ -23,6 +23,11 @@ module Base : sig
   (** Get minimum and maximum result by dotted vector.
       @return (maximum, minimum)
   *)
+
+
+  val detect_separation : Candyvec.Std.Vector.t -> float * float -> float * float ->
+    (Candyvec.Std.Vector.t * float) option
+  (** Detect separating axis between objects. *)
 end
 
 
