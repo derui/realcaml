@@ -18,3 +18,9 @@ type t = {
 
 (** Get empty collidable. *)
 val empty : t
+
+val build : Shape.t array -> t
+(** Build AABB fitting own shapes and return including it. *)
+
+val rebuild : t -> t
+(** Rebuild AABB fitting shapes in the given Collidable.t and return new it. *)
