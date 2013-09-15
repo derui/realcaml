@@ -81,10 +81,10 @@ let setup_constraint (bodyA, solverA) (bodyB, solverB) contact pair_type opt =
     let open Engine_option in
     let setup axis = let denom = V.dot (M3.mult_vec k axis) axis in
                      let rhs = -.(1.0 +. restriction) *. (V.dot relative_velocity axis) in
-                     Printf.printf "rhs : %f\n" (min 0.0 cp.ContactPoint.distance);
+                     Printf.printf "initial rhs : %f\n" (min 0.0 cp.ContactPoint.distance);
                      let rhs = rhs -.
                        (opt.contact_bias *. min 0.0 cp.ContactPoint.distance) /. opt.time_step in
-                     Printf.printf "rhs : %f\n" rhs;
+                     Printf.printf "calculated rhs : %f\n" rhs;
                      let rhs = rhs *. 1.0 /. denom in
                      {Constraint.axis; jac_diag_inv = 1.0 /. denom;
                       rhs; lower_limit = 0.0;
@@ -114,6 +114,9 @@ let solve (bodyA, solverA) (bodyB, solverB) contact opt =
     let scale = impulse *. solver.SolverBody.mass_inv in
     let inertia = M3.ratio solver.SolverBody.inertia_inv impulse in
     let cross = V.cross r ct.Constraint.axis in
+        Printf.printf  "scale : %f\n" scale;
+
+    Printf.printf  "axis : %s\n" (V.to_string ct.Constraint.axis) ;
     let calc_vec f =
       {solver with SolverBody.delta_linear_velocity =
           f solver.SolverBody.delta_linear_velocity
@@ -139,11 +142,15 @@ let solve (bodyA, solverA) (bodyB, solverB) contact opt =
     safe_hd cp.ContactPoint.constraints >>=
       (fun ctraint -> 
         let delta_impulse = ctraint.Constraint.rhs in
+        Printf.printf "initial delta of impulse : %f\n" delta_impulse;
         let delta_velocity_a = V.add solverA.S.delta_linear_velocity (V.cross solverA.S.delta_angular_velocity rA)
         and delta_velocity_b = V.add solverB.S.delta_linear_velocity (V.cross solverB.S.delta_angular_velocity rB) in
         let delta_impulse = calc_delta delta_impulse ctraint delta_velocity_a delta_velocity_b in
+        Printf.printf "delta of impulse : %f\n" delta_impulse;
         let solverA = update_solver delta_impulse solverA ctraint rA `Add
         and solverB = update_solver delta_impulse solverB ctraint rB `Minus in
+        Printf.printf "solver A : %s\n" (V.to_string (solverA.S.delta_linear_velocity));
+        Printf.printf "solver B : %s\n" (V.to_string (solverB.S.delta_linear_velocity));
         return (solverA, solverB)) in
 
   let solve_for_contact solverA solverB =

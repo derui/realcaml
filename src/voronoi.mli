@@ -10,7 +10,7 @@
 type t
 type recent_type = Point of Candyvec.Vector.t
                    | Edge of Candyvec.Vector.t * Candyvec.Vector.t
-                   | Shape
+                   | Shape of Candyvec.Vector.t
 
 module Base : sig
   type t

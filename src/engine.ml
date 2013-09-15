@@ -103,21 +103,6 @@ let broad_phase engine =
   engine.pair_swap <- swap;
   engine.pair_count.(swap) <- count;
   engine
-;;
-
-(* Get closest point from given voronoi regions with target point.  *)
-let get_closest_point_with_voronoi mesh vert plane = function
-  | Voronoi.Point(point) -> point
-  | Voronoi.Edge(edge_point1, edge_point2) ->
-    let edge = V.normalize |< V.sub edge_point2 edge_point1 in
-    V.scale ~v:edge ~scale:(V.dot vert (V.sub vert edge_point1))
-  | Voronoi.Shape ->
-    let facet = mesh.Mesh.facets |> flip Array.get plane in
-    let normal = facet.Mesh.Facet.normal in
-    V.sub vert (V.scale ~v:normal ~scale:(V.dot vert normal))
-
-let is_judge_plane plane normal = V.dot plane.Mesh.Facet.normal normal >= 0.0
-;;
 
 let simple_inverse m =
   let mat3 = M.upper3x3 m |> Candyvec.Matrix3.transpose
@@ -125,98 +110,6 @@ let simple_inverse m =
   let trans = M.translation vec
   and rotate = M.replace_upper3x3 m mat3 in
   M.multiply trans rotate
-;;
-
-(* TRANSLATE: body_bの座標系をbody_aの座標形に変換し、衝突寸前の状態に変換する
-   行列を返す。
-*)
-let get_coodinate_localization_matrix (axis, dist) body_a body_b =
-  let world_a = RI.get_world_transform body_a
-  and world_b = RI.get_world_transform body_b in
-  let trans_b = M.translation (V.invert |< V.scale ~v:axis ~scale:(dist *. 1.1)) in
-  let open Sugarpot.Std.Option.Open in
-  simple_inverse world_a |> (fun mat -> M.multiply trans_b (M.multiply mat world_b))
-;;
-
-(* TODO: 最近接点を探す際、どちらか一方のどれかの形状を座標系として
-   利用できるようにする。bodyが入れ替わっても、座標系は変わってはならない。
-   最終的に取得した点はワールド座標系における衝突点として、それぞれの
-   ローカル座標における衝突点を最終的に必要とする。ここでは、逆行列を必ず求める必要が
-   あるので、簡便のために、正当ではない逆行列を返す可能性があるような関数を4x4行列に
-   作っておく。
-*)
-
-let get_plane_closest_points (axis, dist) body_a body_b trans_mat =
-  let shapes = body_a.RI.collidable.Collidable.shapes in
-  let contacts : Candyvec.Vector.t list ref = ref [] in
-
-  (* TRANSLATE: それぞれのメッシュについて、offsetを反映させた上で実行させる。 *)
-  Array.iter (fun shape ->
-    let mesh = shape.Shape.mesh |> flip Mesh.transform_vertices trans_mat in
-    Array.iteri (fun index plane ->
-      if is_judge_plane plane axis then
-        let voronoi_region = Voronoi.voronoi_region mesh index in
-
-        (* TRANSLATE: Body Bの各shapeにおけるそれぞれの頂点について処理をする *)
-        let points = Array.fold_left (fun contacts shape ->
-          let mesh_b = shape.Shape.mesh |> flip Mesh.transform_vertices trans_mat in
-          Array.fold_left (fun contacts vert ->
-            let point = get_closest_point_with_voronoi mesh vert index |<
-                Voronoi.recent_of_region vert voronoi_region in
-
-            point :: contacts
-          ) [] mesh_b.Mesh.vertices
-        ) [] body_b.RI.collidable.Collidable.shapes in
-        contacts := points @ !contacts
-      else ()
-    ) mesh.Mesh.facets
-  ) shapes;
-  List.map (fun x ->
-    (V.normalize x, V.norm x)) !contacts
-;;
-
-(* TRANSLATE: エッジ同士における最近接点を取得する *)
-let get_edge_closest_points ((axis, dist) : V.t * float)
-    (body_a : RigidBodyInfo.t) (body_b : RigidBodyInfo.t) (trans_mat : M.t): (V.t * float) list =
-  let shapes = body_a.RI.collidable.Collidable.shapes in
-  let contacts : Candyvec.Vector.t list ref = ref [] in
-  let transformed_mesh mat = flip Mesh.transform_vertices mat in
-  let edge_to_segment vertices edge = let (a, b) = edge.Mesh.Edge.vertex_ids in
-                                      Candyvec.Segment.make vertices.(a) vertices.(b) in
-
-  (* TRANSLATE: それぞれのメッシュについて、offsetを反映させた上で、処理の果ていを行う *)
-  Array.iter (fun shape ->
-    let mesh = transformed_mesh trans_mat shape.Shape.mesh in
-    Array.iteri (fun index edge_a ->
-        (* TRANSLATE: Body Bの各shapeにおけるそれぞれの頂点について処理をする *)
-      Array.iter (fun shape_b ->
-        let mesh_b = transformed_mesh trans_mat shape_b.Shape.mesh in
-        let points = Array.fold_left (fun contacts edge_b ->
-          let edge_a = edge_to_segment shape.Shape.mesh.Mesh.vertices edge_a
-          and edge_b = edge_to_segment shape_b.Shape.mesh.Mesh.vertices edge_b in
-          let (e1, e2) = Candyvec.Segment.closest edge_a edge_b in
-          e1 :: contacts
-        ) [] mesh_b.Mesh.edges in
-
-        contacts := points @ !contacts
-      ) |< body_b.RI.collidable.Collidable.shapes
-    ) mesh.Mesh.edges
-  ) shapes;
-  List.map (fun x -> (V.normalize x, V.norm x)) !contacts
-;;
-
-(* TRANSLATE: 二つのbodyにおける最近接点を取得する。 *)
-let get_closest_point (axis, dist) body_a body_b trans_mat =
-  let plane_base_closests = get_plane_closest_points (axis, dist) body_a body_b trans_mat in
-  let edge_base_closests = get_edge_closest_points (axis, dist) body_a body_b trans_mat in
-  List.fold_left (fun (axis, dist) (newaxis, newdist) ->
-    if dist < newdist then (axis, dist)
-    else (newaxis, newdist)
-  ) (List.fold_left (fun (axis, dist) (newaxis, newdist) ->
-    if dist < newdist then (axis, dist)
-    else (newaxis, newdist)
-  ) (axis, dist) edge_base_closests) plane_base_closests
-;;
 
 let update_contact_points bodies ((axis, dist) : V.t * float) (pair : Pair.t) : Pair.t =
   (* TRANSLATE: 最近接点をpairに追加する。 *)
@@ -301,21 +194,22 @@ let narrow_phase engine =
     | (None, _) | (_, None) -> failwith "not found one or two of pair"
     | (Some body_a, Some body_b) ->
       match is_separate body_a body_b  with
-    (* TRANSLATE: APlaneの場合、body Aを基準として判定する。  *)
+      (* TRANSLATE: APlaneの場合、body Aを基準として判定する。  *)
       | Some (APlane, axis, dist) ->
-        let a_to_b = get_coodinate_localization_matrix (axis, dist) body_a body_b in
-        Some(get_closest_point (axis, dist) body_a body_b a_to_b)
-    (* TRANSLATE: BPlaneの場合、body Bを基準として判定する。  *)
+        print_string "APlane \n";
+        Some(ClosestPoint.get_closest_point (axis, dist) body_a body_b)
+      (* TRANSLATE: BPlaneの場合、body Bを基準として判定する。  *)
       | Some (BPlane, axis, dist) ->
         print_string "BPlane \n";
-        let a_to_b = get_coodinate_localization_matrix (axis, dist) body_a body_b in
-        Some(get_closest_point (axis, dist) body_b body_a a_to_b)
-    (* TRANSLATE: Edgeの場合、body Aを基準として判定する。  *)
+        Some(ClosestPoint.get_closest_point (axis, dist) body_b body_a)
+      (* TRANSLATE: Edgeの場合、body Aを基準として判定する。  *)
       | Some (Edge, axis, dist) ->
-        let a_to_b = get_coodinate_localization_matrix (axis, dist) body_a body_b in
-        Some(get_closest_point (axis, dist) body_a body_b a_to_b)
-    (* TRANSLATE: 分離平面が存在する場合には、このペアに対して何も行わない *)
-      | None -> print_string "None"; None in
+        let closest, dist = (ClosestPoint.get_closest_point (axis, dist) body_a body_b) in
+        Printf.printf "closest point : %s\n" (V.to_string closest);
+        Some(ClosestPoint.get_closest_point (axis, dist) body_a body_b)
+    (* wTRANSLATE: 分離平面が存在する場合には、このペアに対して何も行わない *)
+      | None -> print_string "separation None\n"; None
+  in
 
   let updated_pair = Array.mapi (fun index pair ->
     match pair.Pair.pair_type with
@@ -324,6 +218,7 @@ let narrow_phase engine =
       match solve_contact_point index pair with
       | None -> pair
       | Some (axis, dist) ->
+        Printf.printf "Reduction axis : %s %f" (V.to_string axis) dist;
         (* TRANSLATE: ここで取得した衝突点は、すべて剛体Aを基準にとったものとなるため、
            一度ワールド座標系に衝突点を変換する。
         *)
@@ -428,7 +323,7 @@ let update_bodies engine =
   let update_state_position ri =
     let state = ri.RI.state in
     let pos = state.State.pos in
-    let state = {state with State.pos = V.add pos state.State.linear_velocity} in
+    let state = {state with State.pos = V.add pos (V.scale ~scale:time_step ~v:state.State.linear_velocity)} in
     let delta = calc_delta_orientation state.State.angular_velocity time_step in
     let state = {state with State.orientation = Q.multiply state.State.orientation delta} in
     {ri with RI.state = state} in
