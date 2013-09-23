@@ -204,8 +204,6 @@ let narrow_phase engine =
         Some(ClosestPoint.get_closest_point (axis, dist) body_b body_a)
       (* TRANSLATE: Edgeの場合、body Aを基準として判定する。  *)
       | Some (Edge, axis, dist) ->
-        let closest, dist = (ClosestPoint.get_closest_point (axis, dist) body_a body_b) in
-        Printf.printf "closest point : %s\n" (V.to_string closest);
         Some(ClosestPoint.get_closest_point (axis, dist) body_a body_b)
     (* wTRANSLATE: 分離平面が存在する場合には、このペアに対して何も行わない *)
       | None -> print_string "separation None\n"; None

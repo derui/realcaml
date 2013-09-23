@@ -44,7 +44,7 @@ module Base = struct
 
 
 (* TRANSLATE: エッジ同士における最近接点を取得する *)
-  let get_edge_closest_points ((axis, dist) : V.t * float)
+  let get_edge_closest_points 
       (body_a : RigidBodyInfo.t) (body_b : RigidBodyInfo.t) (trans_mat : M.t): (V.t * float) list =
     let shapes = body_a.RI.collidable.Collidable.shapes in
     let contacts : Candyvec.Vector.t list ref = ref [] in
@@ -87,7 +87,7 @@ let get_coodinate_localization_matrix (axis, dist) body_a body_b =
 let get_closest_point (axis, dist) body_a body_b =
   let trans_mat = get_coodinate_localization_matrix (axis, dist) body_a body_b in
   let plane_base_closests = Base.get_plane_closest_points (axis, dist) body_a body_b trans_mat in
-  let edge_base_closests = Base.get_edge_closest_points (axis, dist) body_a body_b trans_mat in
+  let edge_base_closests = Base.get_edge_closest_points  body_a body_b trans_mat in
   List.fold_left (fun (axis, dist) (newaxis, newdist) ->
     if dist < newdist then (axis, dist)
     else (newaxis, newdist)
