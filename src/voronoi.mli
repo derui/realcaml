@@ -9,7 +9,7 @@
 (** type of a voronoi region *)
 type t
 type recent_type = Point of Candyvec.Vector.t
-                   | Edge of Candyvec.Vector.t * Candyvec.Vector.t
+                   | Edge of Candyvec.Vector.t * Candyvec.Vector.t * Candyvec.Vector.t
                    | Shape of Candyvec.Vector.t
 
 module Base : sig
@@ -46,7 +46,7 @@ val voronoi_region :Mesh.t -> int -> t
     Aligns of vertices needs to be counter clockwise.
 
     @param mesh a mesh containing given facet to calculate voronoi regions
-    @param facet number of a facet in given mesh
+    @param number of facet in given mesh
     @return vonoroi regions are calculated with given vertices
 *)
 
@@ -57,3 +57,6 @@ val recent_of_region : Candyvec.Vector.t -> t -> recent_type
     @param regions voronoi regions of the shape to calculate type of recent point with a point
     @return type of recent point
 *)
+
+val expand_recent_point : recent_type -> Candyvec.Vector.t
+(** Expand recent point from recent_type type. *)

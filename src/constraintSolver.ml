@@ -27,6 +27,7 @@ module SolverBody = struct
 
   (** Set up new solver body with a state of the rigid body *)
   let setup state body =
+    let module MU = Candyvec.Std.Matrix in
     let orient_mat = Q.to_matrix state.State.orientation in
     let (inertia, mass) = match state.State.motion_type with
       | State.Static -> (M.scaling V.zero, 0.0)
@@ -40,7 +41,7 @@ module SolverBody = struct
     {delta_linear_velocity = V.zero;
      delta_angular_velocity = V.zero;
      orientation = state.State.orientation;
-     inertia_inv = M.upper3x3 inertia; mass_inv = mass;
+     inertia_inv = MU.to_3x3 inertia; mass_inv = mass;
     }
   ;;
 end

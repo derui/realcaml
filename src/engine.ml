@@ -105,10 +105,11 @@ let broad_phase engine =
   engine
 
 let simple_inverse m =
-  let mat3 = M.upper3x3 m |> Candyvec.Matrix3.transpose
+  let module MU = Candyvec.Std.Matrix in
+  let mat3 = MU.to_3x3 m |> Candyvec.Matrix3.transpose
   and vec = M.get_trans m |> V.invert in
   let trans = M.translation vec
-  and rotate = M.replace_upper3x3 m mat3 in
+  and rotate = MU.replace_3x3 m mat3 in
   M.multiply trans rotate
 
 let update_contact_points bodies ((axis, dist) : V.t * float) (pair : Pair.t) : Pair.t =
@@ -204,8 +205,6 @@ let narrow_phase engine =
         Some(ClosestPoint.get_closest_point (axis, dist) body_b body_a)
       (* TRANSLATE: Edgeの場合、body Aを基準として判定する。  *)
       | Some (Edge, axis, dist) ->
-        let closest, dist = (ClosestPoint.get_closest_point (axis, dist) body_a body_b) in
-        Printf.printf "closest point : %s\n" (V.to_string closest);
         Some(ClosestPoint.get_closest_point (axis, dist) body_a body_b)
     (* wTRANSLATE: 分離平面が存在する場合には、このペアに対して何も行わない *)
       | None -> print_string "separation None\n"; None

@@ -16,9 +16,10 @@ type t = region_type list
 (* TRANSLATE: Pointは最近接点が、いずれかの頂点。
    Edgeは、最近接点が、いずれかのエッジ上に存在する。
    Shapeは、平面上に最近接点が存在する。
+   それぞれ最近接点が含まれる
 *)
 type recent_type = Point of V.t
-                   | Edge of V.t * V.t
+                   | Edge of V.t * V.t * V.t
                    | Shape of V.t
 
 
@@ -118,7 +119,10 @@ module Base = struct
       match calculated with
       | x :: _ ->
         begin match x with
-        | REdge ((e1, e2), _, _) -> Edge (e1, e2)
+        | REdge ((e1, e2), enormal, snormal) -> 
+          let edge = V.sub e2 e1 in
+          let recent_point = V.scale ~v:edge ~scale:(V.dot edge (V.sub point e1)) in
+          Edge (recent_point, e1, e2)
         | RPoint (p, _, _, _) -> Point p
         end
       | _ -> failwith "recent region not found..."
@@ -136,3 +140,9 @@ let voronoi_region mesh facet =
 (* TRANSLATE: 対象が、あるボロノイ領域における最近接領域の種類を取得する *)
 let recent_of_region target voronois =
   Base.recent_region ~region:voronois ~point:target
+
+(* Get closest point from given voronoi regions with target point.  *)
+let expand_recent_point = function
+  | Point(point) -> point
+  | Edge(nearest, _, _) -> nearest
+  | Shape p -> p
