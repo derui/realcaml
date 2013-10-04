@@ -19,14 +19,14 @@ module Base = struct
     let shapes = body_a.RI.collidable.Collidable.shapes in
     let contacts : Candyvec.Vector.t list ref = ref [] in
 
-  (* TRANSLATE: それぞれのメッシュについて、offsetを反映させた上で実行させる。 *)
+    (* TRANSLATE: それぞれのメッシュについて、offsetを反映させた上で実行させる。 *)
     Array.iter (fun shape ->
       let mesh = shape.Shape.mesh |> flip Mesh.transform_vertices trans_mat in
       Array.iteri (fun index plane ->
         if is_observe_face plane axis then
           let voronoi_region = Voronoi.voronoi_region mesh index in
 
-        (* TRANSLATE: Body Bの各shapeにおけるそれぞれの頂点について処理をする *)
+          (* TRANSLATE: Body Bの各shapeにおけるそれぞれの頂点について処理をする *)
           let points = Array.fold_left (fun contacts shape ->
             let mesh_b = shape.Shape.mesh |> flip Mesh.transform_vertices trans_mat in
             Array.fold_left (fun contacts vert ->
@@ -43,7 +43,7 @@ module Base = struct
     List.map (fun x -> (V.normalize x, V.norm x)) !contacts
 
 
-(* TRANSLATE: エッジ同士における最近接点を取得する *)
+  (* TRANSLATE: エッジ同士における最近接点を取得する *)
   let get_edge_closest_points 
       (body_a : RigidBodyInfo.t) (body_b : RigidBodyInfo.t) (trans_mat : M.t): (V.t * float) list =
     let shapes = body_a.RI.collidable.Collidable.shapes in
@@ -54,11 +54,11 @@ module Base = struct
       Candyvec.Segment.make vertices.(a) vertices.(b)
     in
 
-  (* TRANSLATE: それぞれのメッシュについて、offsetを反映させた上で、処理の果ていを行う *)
+    (* TRANSLATE: それぞれのメッシュについて、offsetを反映させた上で、処理の果ていを行う *)
     Array.iter (fun shape ->
       let mesh = transform_mesh trans_mat shape.Shape.mesh in
       Array.iteri (fun index edge_a ->
-      (* TRANSLATE: Body Bの各shapeにおけるそれぞれの頂点について処理をする *)
+        (* TRANSLATE: Body Bの各shapeにおけるそれぞれの頂点について処理をする *)
         Array.iter (fun shape_b ->
           let mesh_b = transform_mesh trans_mat shape_b.Shape.mesh in
           let points = Array.fold_left (fun contacts edge_b ->
@@ -81,11 +81,15 @@ let get_coodinate_localization_matrix (axis, dist) body_a body_b =
   and world_b = RI.get_world_transform body_b in
   let trans_b = M.translation (V.invert |< V.scale ~v:axis ~scale:(dist *. 1.1)) in
   let open Sugarpot.Std.Option.Open in
-  M.force_inverse world_a |> (fun mat -> M.multiply trans_b (M.multiply mat world_b))
+  let module MU = Candyvec.Std.Matrix in
+  MU.force_inverse world_a |> (fun mat -> M.multiply trans_b (M.multiply mat world_b))
+
+let get_inverse_transation axis dist =
+  M.translation (V.invert |< V.scale ~v:axis ~scale:(dist *. 1.1))
 
 (* TRANSLATE: 二つのbodyにおける最近接点を取得する。 *)
 let get_closest_point (axis, dist) body_a body_b =
-  let trans_mat = get_coodinate_localization_matrix (axis, dist) body_a body_b in
+  let trans_mat = get_inverse_transation axis dist in
   let plane_base_closests = Base.get_plane_closest_points (axis, dist) body_a body_b trans_mat in
   let edge_base_closests = Base.get_edge_closest_points  body_a body_b trans_mat in
   List.fold_left (fun (axis, dist) (newaxis, newdist) ->
