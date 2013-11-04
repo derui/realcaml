@@ -14,9 +14,9 @@ type t = {
 
 
 module RI = RigidBodyInfo
-module M = Candyvec.Matrix4
-module V = Candyvec.Vector
-module Q = Candyvec.Quaternion
+module M = Candyvec.Std.Matrix4
+module V = Candyvec.Std.Vector
+module Q = Candyvec.Std.Quaternion
 module EO = Engine_option
 
 type pair_update_type = Remove | Update of (Candyvec.Vector.t * float) | New of (Candyvec.Vector.t * float)
@@ -32,14 +32,14 @@ let make ?(time_step=0.016) ?(contact_bias=0.1) ?(contact_stop=0.001)
    pair_count = [|0; 0|];
    pair = Array.make_matrix 2 max_pairs Pair.empty;
   }
-;;
+
 
 let add_body engine body =
   {engine with sweep_prune = SweepPrune.add engine.sweep_prune body}
-;;
+
 
 let bodies engine = engine.sweep_prune.SweepPrune.bodies
-;;
+
 
 (* TRANSLATE: rigid body同士の衝突判定を行う。 *)
 let intersect_bodies engine =
@@ -74,7 +74,7 @@ let sort_pair pair =
   let comp a b = Int64.compare a.Pair.key b.Pair.key in
   Array.stable_sort comp pair;
   pair
-;;
+
 
 (* do broad phase *)
 let broad_phase engine =
@@ -114,69 +114,15 @@ let simple_inverse m =
 
 let update_contact_points bodies ((axis, dist) : V.t * float) (pair : Pair.t) : Pair.t =
   (* TRANSLATE: 最近接点をpairに追加する。 *)
-  let contacts = pair.Pair.contact in
   let body_a = bodies.(Int32.to_int pair.Pair.indexA)
   and body_b = bodies.(Int32.to_int pair.Pair.indexB) in
   match (body_a, body_b) with
   | (None, _) | (_, None) -> failwith "body is not found..."
   | (Some(body_a), Some(body_b)) ->
-    let world_a = RI.get_world_transform body_a
-    and world_b = RI.get_world_transform body_b in
-    let new_point = {ContactPoint.distance = dist;
-                     pointA = M.mult_vec ~vec:axis ~mat:world_a;
-                     pointB = M.mult_vec ~vec:axis ~mat:world_b;
-                     normal = axis;
-                     constraints = []
-                    } in
-    let points_list = new_point :: contacts.Contact.contact_points in
-
-    if contacts.Contact.contact_num <= 4 then
-      let friction = contacts.Contact.friction in
-      let module A = Sugarpot.Std.Array in
-      {pair with Pair.contact = {
-        Contact.contact_num = succ contacts.Contact.contact_num;
-        friction; contact_points = points_list;
-       }
-      }
-    else
-    (* TRANSLATE:限度の個数以上になる場合、面積が最大になるような衝突点のみ選択する  *)
-      let max_dist = List.fold_left (fun max_point point ->
-        if max_point.ContactPoint.distance >= point.ContactPoint.distance then
-          max_point
-        else
-          point
-      ) new_point points_list in
-      let points_without_max = Array.of_list |< List.filter (fun x ->
-        max_dist.ContactPoint.distance <> x.ContactPoint.distance) points_list in
-      let combi_points = [(points_without_max.(0), points_without_max.(1),
-                           points_without_max.(2));
-                          (points_without_max.(0), points_without_max.(2),
-                           points_without_max.(3));
-                          (points_without_max.(0), points_without_max.(1),
-                           points_without_max.(3));
-                          (points_without_max.(1), points_without_max.(2),
-                           points_without_max.(3));] in
-      let calc_space a b c d =
-        let a = a.ContactPoint.pointA
-        and b = b.ContactPoint.pointA
-        and c = c.ContactPoint.pointA
-        and d = d.ContactPoint.pointA in
-        List.sort compare [V.cross (V.sub a c) (V.sub b d) |> V.norm |> abs_float;
-                           V.cross (V.sub a b) (V.sub d c) |> V.norm |> abs_float;
-                           V.cross (V.sub a d) (V.sub b c) |> V.norm |> abs_float;] |> List.hd in
-    (* TRANSLATE: 最大のdistを中心として、残りを組み合わせてチェックする *)
-      let ((a, b, c, d), _) =
-        (List.map (fun (b, c, d) -> ((max_dist,b,c,d), calc_space max_dist b c d))
-          combi_points) |>
-              List.sort (fun (_, square1) (_, square2) -> compare square1 square2) |> List.hd in
-      let friction = contacts.Contact.friction in
-      let module A = Sugarpot.Std.Array in
-      {pair with Pair.contact = {
-        Contact.contact_num = contacts.Contact.contact_num;
-        friction; contact_points = [a;b;c;d]
-       }
-      }
-;;
+    {pair with Pair.contact =
+        Contact.update_contact_points ~contact:(pair.Pair.contact)
+          ~body_a ~body_b ~closest:(axis, dist)
+    }
 
 (* do narrow phase *)
 let narrow_phase engine =
@@ -231,7 +177,6 @@ let narrow_phase engine =
   ) current_pair in
   engine.pair.(engine.pair_swap) <- updated_pair;
   engine
-;;
 
 (* do solve constarints *)
 let solve_constraints engine =
@@ -291,13 +236,11 @@ let solve_constraints engine =
   (* TRANSLATE 更新したSweepPluneを、engineに再度設定する *)
   engine.pair.(engine.pair_swap) <- current_pair;
   {engine with sweep_prune = {engine.sweep_prune with SweepPrune.bodies = bodies}}
-;;
 
 let get_current_pair engine =
   let swap = engine.pair_swap
   and pairs = engine.pair in
   pairs.(swap)
-;;
 
 let map_bodies ~f ary =
   Array.map (function
@@ -307,7 +250,6 @@ let map_bodies ~f ary =
     | State.Active -> Some(f sp)
     | State.Static -> Some sp
   ) ary
-;;
 
 let update_bodies engine =
   (* TRANSLATE: 算出した速度を、各剛体に反映する' *)
@@ -322,7 +264,9 @@ let update_bodies engine =
   let update_state_position ri =
     let state = ri.RI.state in
     let pos = state.State.pos in
+    Printf.printf "linear velocity : %s\n" (V.to_string state.State.linear_velocity);
     let state = {state with State.pos = V.add pos (V.scale ~scale:time_step ~v:state.State.linear_velocity)} in
+    Printf.printf "pos: %s\n" (V.to_string state.State.pos);
     let delta = calc_delta_orientation state.State.angular_velocity time_step in
     let state = {state with State.orientation = Q.multiply state.State.orientation delta} in
     {ri with RI.state = state} in
@@ -330,7 +274,6 @@ let update_bodies engine =
   {engine with sweep_prune = {
     engine.sweep_prune with SweepPrune.bodies = map_bodies ~f:update_state_position bodies}
   }
-;;
 
 (* 各剛体に重力の形で外力を与える。それぞれの剛体は並進運動を行う *)
 let apply_gravity engine =
@@ -352,7 +295,6 @@ let apply_gravity engine =
     engine.sweep_prune with SweepPrune.bodies = updated;
    }
   }
-;;
 
 let execute_pipeline engine =
   (* TRANSLATE: 剛体に重力の形で外力を与える *)
@@ -362,4 +304,3 @@ let execute_pipeline engine =
   let engine = solve_constraints engine in
   let engine = update_bodies engine in
   engine
-;;

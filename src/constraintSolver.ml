@@ -115,7 +115,8 @@ let solve (bodyA, solverA) (bodyB, solverB) contact opt =
     let scale = impulse *. solver.SolverBody.mass_inv in
     let inertia = M3.ratio solver.SolverBody.inertia_inv impulse in
     let cross = V.cross r ct.Constraint.axis in
-        Printf.printf  "scale : %f\n" scale;
+    Printf.printf  "scale : %f\n" scale;
+    Printf.printf  "cross : %s %s\n" (V.to_string r) (V.to_string cross);
 
     Printf.printf  "axis : %s\n" (V.to_string ct.Constraint.axis) ;
     let calc_vec f =

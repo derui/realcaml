@@ -17,3 +17,7 @@ type t = {
 
 (** Get empty contact. *)
 val empty: t
+
+(** Get new contact structure updated with two bodies and a new closest point *)
+val update_contact_points : contact:t -> body_a:RigidBodyInfo.t -> body_b:RigidBodyInfo.t ->
+  closest:(Candyvec.Std.Vector.t * float) -> t
