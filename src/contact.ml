@@ -45,17 +45,14 @@ let calc_next_contact contact next_list =
 
 let update_contact_points ~contact ~body_a ~body_b ~closest =
   (* TRANSLATE: 最近接点をpairに追加する。 *)
-  let axis, dist = closest in
-  let world_a = RI.get_world_transform body_a |> MU.force_inverse
-  and world_b = RI.get_world_transform body_b |> MU.force_inverse in
-  Printf.printf "contact point axis %s \n" (V.to_string axis);
-  Printf.printf "pointA : %s pointB : %s\n" (V.to_string (M.mult_vec ~vec:axis ~mat:world_a))
-    (V.to_string (M.mult_vec ~vec:axis ~mat:world_b));
+  let point = closest in
+  let open Candyvec.Std.Matrix4.Open in
+  let world_a = RI.get_world_transform body_a in
+  let world_b = world_a *|> (RI.get_world_transform body_b |> MU.force_inverse) in
 
-  let new_point = {ContactPoint.empty with ContactPoint.distance = dist;
-                   pointA = M.mult_vec ~vec:axis ~mat:world_a;
-                   pointB = M.mult_vec ~vec:axis ~mat:world_b;
-                   normal = axis;
+  let new_point = {ContactPoint.empty with ContactPoint.distance = closest.ClosestPoint.depth;
+                   pointA = point.ClosestPoint.point_a; pointB = point.ClosestPoint.point_b *||> world_b;
+                   normal = closest.ClosestPoint.normal ;
                   } in
   let points_list = new_point :: contact.contact_points in
   calc_next_contact contact points_list

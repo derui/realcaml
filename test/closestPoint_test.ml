@@ -53,8 +53,8 @@ let test_get_closest_points_on_edges () =
   let body_a = make_body {V.x = 1.0;y = 0.0; z = 0.0} Q.identity in
   let body_b = make_body V.zero Q.identity in
 
-  let points = C.Base.get_edge_closest_points body_a body_b (Mat.identity ()) in
-  assert_equal 36 (List.length points)
+  let points = C.Base.get_edge_closest_points (V.zero, 0.0) body_a body_b (Mat.identity ()) in
+  assert_equal 1 (List.length points)
 
 let suite = "detect closest point between meshs" >::: [
   "check the plane to be directed to equal direction for normal" >:: test_observe_face;

@@ -112,7 +112,7 @@ let simple_inverse m =
   and rotate = MU.replace_3x3 m mat3 in
   M.multiply trans rotate
 
-let update_contact_points bodies ((axis, dist) : V.t * float) (pair : Pair.t) : Pair.t =
+let update_contact_points bodies closest pair =
   (* TRANSLATE: 最近接点をpairに追加する。 *)
   let body_a = bodies.(Int32.to_int pair.Pair.indexA)
   and body_b = bodies.(Int32.to_int pair.Pair.indexB) in
@@ -121,7 +121,7 @@ let update_contact_points bodies ((axis, dist) : V.t * float) (pair : Pair.t) : 
   | (Some(body_a), Some(body_b)) ->
     {pair with Pair.contact =
         Contact.update_contact_points ~contact:(pair.Pair.contact)
-          ~body_a ~body_b ~closest:(axis, dist)
+          ~body_a ~body_b ~closest
     }
 
 (* do narrow phase *)
@@ -162,18 +162,8 @@ let narrow_phase engine =
     | _ -> 
       match solve_contact_point index pair with
       | None -> pair
-      | Some (axis, dist) ->
-        Printf.printf "Reduction axis : %s %f" (V.to_string axis) dist;
-        (* TRANSLATE: ここで取得した衝突点は、すべて剛体Aを基準にとったものとなるため、
-           一度ワールド座標系に衝突点を変換する。
-        *)
-        match bodies.(Int32.to_int pair.Pair.indexA) with
-        | None -> failwith "body A not found"
-        | Some(body_a) ->
-          let to_world = RI.get_world_transform body_a |> simple_inverse in
-          let axis = M.mult_vec ~mat:to_world ~vec:axis in
-
-          update_contact_points bodies (axis, dist) pair
+      | Some closest_point ->
+        update_contact_points bodies closest_point pair
   ) current_pair in
   engine.pair.(engine.pair_swap) <- updated_pair;
   engine

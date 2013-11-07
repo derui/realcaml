@@ -10,9 +10,14 @@ module Base = struct
   (* Result of functions in this module. That types are each positions to first and second mesh,
      and last float is distination between them.
   *)
-  type t = V.t * V.t * float
+  type t = {
+    normal : V.t;
+    point_a : V.t;
+    point_b : V.t;
+    depth : float
+  }
 
-  let sort_points list = List.sort (fun (_,_,d1) (_,_,d2) -> compare d1 d2) list
+  let sort_points list = List.sort (fun {depth = d1;_} {depth = d2;_} -> compare d1 d2) list
     
   let is_observe_face plane normal = V.dot plane.Mesh.Facet.normal normal >= 0.0
   (* Check the plane to be equal direction for normal. *)
@@ -45,7 +50,10 @@ module Base = struct
               let point = Voronoi.recent_of_region vert voronoi_region |>
                   Voronoi.expand_recent_point in
 
-              (point, vert, V.sub point vert |> V.norm)
+              { normal = axis;
+                point_a = point;
+                point_b = vert;
+                depth = V.sub point vert |> V.norm}
             ) mesh_b.Mesh.vertices
           ) body_b.RI.collidable.Collidable.shapes in
           match points with
@@ -60,7 +68,7 @@ module Base = struct
     | _ -> List.concat contacts |> O.option_map id
 
   (* TRANSLATE: エッジ同士における最近接点を取得する *)
-  let get_edge_closest_points 
+  let get_edge_closest_points (axis, _)
       (body_a : RigidBodyInfo.t) (body_b : RigidBodyInfo.t) (trans_mat : M.t): t list =
     let shapes = body_a.RI.collidable.Collidable.shapes in
     let open Candyvec.Std.Matrix4.Open in
@@ -86,7 +94,10 @@ module Base = struct
             let edge_a = edge_to_segment shape.Shape.mesh.Mesh.vertices edge_a
             and edge_b = edge_to_segment shape_b.Shape.mesh.Mesh.vertices edge_b in
             let (e1, e2) = Candyvec.Segment.closest edge_a edge_b in
-            (e1, e2, V.sub e1 e2 |> V.norm)
+            { normal = axis;
+              point_a = e1;
+              point_b = e2;
+              depth = V.sub e1 e2 |> V.norm}
           ) mesh_b.Mesh.edges in
 
           match points with
@@ -117,11 +128,11 @@ let get_closest_point (axis, dist) body_a body_b =
   let reverse_mat = get_reverse_translation axis dist in
   let a_plane_base_closests = Base.get_plane_closest_points (axis, dist) body_a body_b offset_mat in
   let b_plane_base_closests = Base.get_plane_closest_points (axis, dist) body_b body_a offset_mat in
-  let edge_base_closests = Base.get_edge_closest_points  body_a body_b offset_mat in
-  let p1, p2, dist = List.concat [edge_base_closests;
-                            a_plane_base_closests;
-                            b_plane_base_closests] |> Base.sort_points |> List.rev |> List.hd in
+  let edge_base_closests = Base.get_edge_closest_points (axis, dist) body_a body_b offset_mat in
+  let point = List.concat [edge_base_closests;
+                     a_plane_base_closests;
+                     b_plane_base_closests] |> Base.sort_points |> List.rev |> List.hd in
   let open Candyvec.Std.Matrix4.Open in
-  (p1, p2 *||> reverse_mat, dist)
+  {point with Base.point_b = point.Base.point_b *||> reverse_mat}
   
-
+include Base
