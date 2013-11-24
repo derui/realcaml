@@ -54,7 +54,8 @@ let setup_solver_body bi =
 type solver_info = RigidBodyInfo.t * SolverBody.t
 
 let setup_constraint (bodyA, solverA) (bodyB, solverB) contact pair_type opt =
-  let calc_velocity s r = V.add s.State.linear_velocity (V.cross s.State.angular_velocity r) in
+  let calc_velocity s r =
+    V.add s.State.linear_velocity (V.cross s.State.angular_velocity r) in
 
   let setup_contact_point cp =
     let rA = Q.rotate bodyA.RigidBodyInfo.state.State.orientation cp.ContactPoint.pointA
@@ -82,10 +83,8 @@ let setup_constraint (bodyA, solverA) (bodyB, solverB) contact pair_type opt =
     let open Engine_option in
     let setup axis = let denom = V.dot (M3.mult_vec k axis) axis in
                      let rhs = -.(1.0 +. restriction) *. (V.dot relative_velocity axis) in
-                     Printf.printf "initial rhs : %f\n" (min 0.0 cp.ContactPoint.distance);
                      let rhs = rhs -.
                        (opt.contact_bias *. min 0.0 cp.ContactPoint.distance) /. opt.time_step in
-                     Printf.printf "calculated rhs : %f\n" rhs;
                      let rhs = rhs *. 1.0 /. denom in
                      {Constraint.axis; jac_diag_inv = 1.0 /. denom;
                       rhs; lower_limit = 0.0;
@@ -108,6 +107,7 @@ let solve (bodyA, solverA) (bodyB, solverB) contact opt =
   let calc_delta impulse ct va vb =
     let jac = ct.Constraint.jac_diag_inv
     and axis = ct.Constraint.axis in
+    Printf.printf "%f %s\n" jac (V.to_string (V.sub va vb));
     let impulse = impulse -. jac *. (V.dot axis (V.sub va vb)) in
     max impulse ct.Constraint.lower_limit |> min ct.Constraint.upper_limit in
 
@@ -115,10 +115,6 @@ let solve (bodyA, solverA) (bodyB, solverB) contact opt =
     let scale = impulse *. solver.SolverBody.mass_inv in
     let inertia = M3.ratio solver.SolverBody.inertia_inv impulse in
     let cross = V.cross r ct.Constraint.axis in
-    Printf.printf  "scale : %f\n" scale;
-    Printf.printf  "cross : %s %s\n" (V.to_string r) (V.to_string cross);
-
-    Printf.printf  "axis : %s\n" (V.to_string ct.Constraint.axis) ;
     let calc_vec f =
       {solver with SolverBody.delta_linear_velocity =
           f solver.SolverBody.delta_linear_velocity
@@ -132,19 +128,18 @@ let solve (bodyA, solverA) (bodyB, solverB) contact opt =
     | `Minus -> calc_vec V.sub in
 
   let cps = contact.Contact.contact_points in
-  
+
   (* TRANSLATE 特定のContactPointについて、拘束演算を行う *)
   let solve_per_contact_point solverA solverB cp =
     let module S = SolverBody in
     let rA = Q.rotate bodyA.RigidBodyInfo.state.State.orientation cp.ContactPoint.pointA
     and rB = Q.rotate bodyB.RigidBodyInfo.state.State.orientation cp.ContactPoint.pointB in
-  
+
     let open Sugarpot.Std.Option.Open in
     let open Sugarpot.Std.List in
     safe_hd cp.ContactPoint.constraints >>=
-      (fun ctraint -> 
+      (fun ctraint ->
         let delta_impulse = ctraint.Constraint.rhs in
-        Printf.printf "initial delta of impulse : %f\n" delta_impulse;
         let delta_velocity_a = V.add solverA.S.delta_linear_velocity (V.cross solverA.S.delta_angular_velocity rA)
         and delta_velocity_b = V.add solverB.S.delta_linear_velocity (V.cross solverB.S.delta_angular_velocity rB) in
         let delta_impulse = calc_delta delta_impulse ctraint delta_velocity_a delta_velocity_b in
@@ -159,7 +154,7 @@ let solve (bodyA, solverA) (bodyB, solverB) contact opt =
     List.fold_left (fun solvers cp ->
       match solvers with
       | None -> failwith "Not have any constraints, maybe not initialized?"
-      | Some (sA, sB) -> 
+      | Some (sA, sB) ->
         solve_per_contact_point sA sB cp) (Some (solverA, solverB)) in
   let (solverA, solverB) = Sugarpot.Std.Option.get (solve_for_contact solverA solverB cps) in
   ((bodyA, solverA), (bodyB, solverB))
@@ -170,10 +165,10 @@ let update_constraint contact =
   let friction = contact.Contact.friction in
 
   let new_constraint ct fric = {ct with Constraint.lower_limit = -.fric; upper_limit = fric} in
-   
+
   let update_constraint_for_cp cp =
     match cp.ContactPoint.constraints with
-    | ctraint1 :: ctraint2 :: ctraint3 :: _ -> 
+    | ctraint1 :: ctraint2 :: ctraint3 :: _ ->
       let max_friction = friction *. (abs_float ctraint1.Constraint.accum_impulse) in
       {cp with ContactPoint.constraints =
           [ctraint1;

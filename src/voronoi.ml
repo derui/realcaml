@@ -22,14 +22,13 @@ type recent_type = Point of V.t
                    | Edge of V.t * V.t * V.t
                    | Shape of V.t
 
-
 module Base = struct
   type t = region_type
   type triangle = V.t * V.t * V.t
 
   (* TRANSLATE : エッジと面の法線から、エッジのボロノイ領域を取得する *)
   let make_edge_region (v1, v2) normal =
-    let edge_normal = V.cross (V.sub v2 v1) normal in
+    let edge_normal = V.cross (V.sub v2 v1) normal |> V.normalize in
     REdge ((v1, v2), edge_normal, normal)
 
   (* TRANSLATE: 指定された点を含む二本のエッジを取得する *)
@@ -48,14 +47,14 @@ module Base = struct
   let make_point_region (e1, e2, e3) normal point =
     let e1, e2 = point_of_contained_edge point (e1, e2, e3) in
     match (make_edge_region e1 normal, make_edge_region e2 normal) with
-    | (REdge (_, normal1, _), REdge (_, normal2, _)) ->
-      RPoint (point, normal1, normal2, normal)
+    | (REdge ((e11, e12), normal1, _), REdge ((e21, e22), normal2, _)) ->
+      RPoint (point, V.sub e12 e11 |> V.normalize, V.sub e21 e22 |> V.normalize, normal)
     | _ -> failwith "error"
 
   let make_region (v1, v2, v3) =
     let edges = [(v1, v2); (v2, v3); (v3, v1)] in
     let e1, e2 = (V.sub v2 v1, V.sub v3 v2) in
-    let normal = V.cross e1 e2 in
+    let normal = V.cross e1 e2 |> V.normalize in
 
     let open Sugarpot.Std.Prelude in
     let edge_regions = List.map (flip make_edge_region normal) edges in
@@ -76,12 +75,12 @@ module Base = struct
     match edge with
     | (REdge((e1, e2), enormal, _)) -> 
       let open Sugarpot.Std.List in
-      let edge1 = V.normalize (V.sub e2 e1)
-      and edge2 = V.normalize (V.sub e1 e2)
+      let edge1 = V.normalize (V.sub e2 e1) in
+      let edge2 = V.invert edge1
       and base1 = V.sub point e1
       and base2 = V.sub point e2 in
       List.for_all id
-        [is_contain edge1 base1; is_contain edge2 base2; is_contain enormal base1]
+        [is_contain edge1 base1; is_contain edge2 base2; is_contain enormal point]
     | _ -> failwith "contain_region_for_edge can only apply to REdge"
 
   let contain_region_for_point p point =
@@ -96,15 +95,15 @@ module Base = struct
     let is_contain_shape =
       List.for_all (function
       | REdge ((e1, e2), enormal, snormal) -> 
-          let projected = projection_point ~base:e1 ~normal:snormal ~point in
-          (V.dot projected enormal) < 0.0
-      | _ -> false
+        let projected = projection_point ~base:e1 ~normal:snormal ~point in
+        (V.dot projected enormal) < 0.0
+      | _ -> true
       ) region
     in
     let get_point_in_shape = 
       List.hd |< List.map (function
-      | REdge ((e1, e2), enormal, snormal) -> 
-          projection_point ~base:e1 ~normal:snormal ~point
+      | REdge ((e1, e2), enormal, snormal) ->
+        projection_point ~base:e1 ~normal:snormal ~point
       | _ -> failwith "can not calculate projection point on the plane"
       ) (List.filter (function | REdge _ -> true | _ -> false) region)
     in
@@ -113,8 +112,8 @@ module Base = struct
     else
       let calculated = List.filter (fun current ->
         match current with
-        | REdge _ -> contain_region_for_edge current point
-        | RPoint _ -> contain_region_for_point current point
+        | REdge _ -> contain_region_for_edge current get_point_in_shape
+        | RPoint _ -> contain_region_for_point current get_point_in_shape
       ) region in
       match calculated with
       | x :: _ ->

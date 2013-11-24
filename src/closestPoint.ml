@@ -58,7 +58,7 @@ module Base = struct
           ) body_b.RI.collidable.Collidable.shapes in
           match points with
           | [] -> None
-          | _ -> Some (List.concat points |> sort_points |> List.rev |> List.hd)
+          | _ -> Some (List.concat points |> sort_points |> List.hd)
         else None
       ) mesh.Mesh.facets
     ) shapes in
@@ -92,8 +92,8 @@ module Base = struct
           let mesh_b = transform_mesh world_b shape_b.Shape.mesh in
           let points = Array.to_list |< Array.map (fun edge_b ->
             let edge_a = edge_to_segment shape.Shape.mesh.Mesh.vertices edge_a
-            and edge_b = edge_to_segment shape_b.Shape.mesh.Mesh.vertices edge_b in
-            let (e1, e2) = Candyvec.Segment.closest edge_a edge_b in
+            and edge_b = edge_to_segment mesh_b.Mesh.vertices edge_b in
+            let e1, e2 = Candyvec.Segment.closest edge_a edge_b in
             { normal = axis;
               point_a = e1;
               point_b = e2;
@@ -102,16 +102,16 @@ module Base = struct
 
           match points with
           | [] -> None
-          | _ -> Some (sort_points points |> List.rev |> List.hd)
+          | _ -> Some (sort_points points |> List.hd)
 
         ) body_b.RI.collidable.Collidable.shapes in
         match O.option_map id points with
         | [] -> None
-        | points -> Some (sort_points points |> List.rev |> List.hd)
+        | points -> Some (sort_points points |> List.hd)
       ) mesh.Mesh.edges in
       match O.option_map id points with
       | [] -> None
-      | points -> Some (sort_points points |> List.rev |> List.hd)
+      | points -> Some (sort_points points |> List.hd)
     ) shapes in
     O.option_map id contacts 
 end
@@ -131,7 +131,7 @@ let get_closest_point (axis, dist) body_a body_b =
   let edge_base_closests = Base.get_edge_closest_points (axis, dist) body_a body_b offset_mat in
   let point = List.concat [edge_base_closests;
                      a_plane_base_closests;
-                     b_plane_base_closests] |> Base.sort_points |> List.rev |> List.hd in
+                     b_plane_base_closests] |> Base.sort_points |> List.hd in
   let open Candyvec.Std.Matrix4.Open in
   {point with Base.point_b = point.Base.point_b *||> reverse_mat}
   
