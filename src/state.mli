@@ -20,7 +20,7 @@ type t = {
 val empty: t
 
 (** Get a transform matrix to convert world coodinate. *)
-val to_world_transform : t -> Candyvec.Std.Matrix4.t
+val to_world_transform : t -> Candyvec.Std.Matrix.t
 
 (** A shortcut to check motion type of a State. *)
 val is_static : t -> bool

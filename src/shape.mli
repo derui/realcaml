@@ -14,4 +14,4 @@ type t = {
 }
 
 (** Get offset transformation matrix of given shape  *)
-val offset_transform : t -> Candyvec.Matrix4.t
+val offset_transform : t -> Candyvec.Matrix.t

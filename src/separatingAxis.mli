@@ -15,7 +15,7 @@ type separating_type = Edge             (* Edge to edge *)
 
 type separating_axis = separating_type * Candyvec.Vector.t * depth
 
-type mesh_info = Mesh.t * Candyvec.Std.Matrix4.t
+type mesh_info = Mesh.t * Candyvec.Std.Matrix.t
 
 (** A Module what is provided base functions for SeparationAxis module. *)
 module Base : sig

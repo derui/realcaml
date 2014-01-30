@@ -14,7 +14,7 @@ type t = {
 
 
 module RI = RigidBodyInfo
-module M = Candyvec.Std.Matrix4
+module M = Candyvec.Std.Matrix
 module V = Candyvec.Std.Vector
 module Q = Candyvec.Std.Quaternion
 module EO = Engine_option
@@ -104,14 +104,6 @@ let broad_phase engine =
   engine.pair_count.(swap) <- count;
   engine
 
-let simple_inverse m =
-  let module MU = Candyvec.Std.Matrix in
-  let mat3 = MU.to_3x3 m |> Candyvec.Matrix3.transpose
-  and vec = M.get_trans m |> V.invert in
-  let trans = M.translation vec
-  and rotate = MU.replace_3x3 m mat3 in
-  M.multiply trans rotate
-
 let update_contact_points bodies closest pair =
   (* TRANSLATE: 最近接点をpairに追加する。 *)
   let body_a = bodies.(Int32.to_int pair.Pair.indexA)
@@ -143,18 +135,15 @@ let narrow_phase engine =
       match is_separate body_a body_b  with
       (* TRANSLATE: APlaneの場合、body Aを基準として判定する。  *)
       | Some (APlane, axis, dist) ->
-        print_string "APlane \n";
         Some(ClosestPoint.get_closest_point (axis, dist) body_a body_b)
       (* TRANSLATE: BPlaneの場合、body Bを基準として判定する。  *)
       | Some (BPlane, axis, dist) ->
-        print_string "BPlane \n";
         Some(ClosestPoint.get_closest_point (axis, dist) body_b body_a)
       (* TRANSLATE: Edgeの場合、body Aを基準として判定する。  *)
       | Some (Edge, axis, dist) ->
-        Printf.printf "edge dist %f\n" dist;
         Some(ClosestPoint.get_closest_point (axis, dist) body_a body_b)
     (* wTRANSLATE: 分離平面が存在する場合には、このペアに対して何も行わない *)
-      | None -> print_string "separation None\n"; None
+      | None -> None
   in
 
   let updated_pair = Array.mapi (fun index pair ->
@@ -250,14 +239,13 @@ let update_bodies engine =
   let calc_delta_orientation angular time_step =
     let angular = V.scale ~v:angular ~scale:time_step in
     let axis = V.scale ~v:angular ~scale:(1.0 /. V.norm angular) in
-    Q.make ~angle:(cos |< V.norm angular) ~vec:(V.scale ~v:axis ~scale:(sin |< V.norm angular)) in
+    Q.make ~angle:(V.norm angular) ~vec:axis in
 
   let update_state_position ri =
     let state = ri.RI.state in
     let pos = state.State.pos in
     Printf.printf "linear velocity : %s\n" (V.to_string state.State.linear_velocity);
     let state = {state with State.pos = V.add pos (V.scale ~scale:time_step ~v:state.State.linear_velocity)} in
-    Printf.printf "pos: %s\n" (V.to_string state.State.pos);
     let delta = calc_delta_orientation state.State.angular_velocity time_step in
     let state = {state with State.orientation = Q.multiply state.State.orientation delta} in
     {ri with RI.state = state} in

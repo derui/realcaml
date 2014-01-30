@@ -1,7 +1,7 @@
 open Sugarpot.Std.Prelude
 module RI = RigidBodyInfo
-module M = Candyvec.Std.Matrix4
-module MU = Candyvec.Std.Matrix
+module M = Candyvec.Std.Matrix
+module MU = Candyvec.Std.Matrix_util
 module V = Candyvec.Std.Vector
 module Q = Candyvec.Std.Quaternion
 
@@ -18,7 +18,7 @@ module Base = struct
   }
 
   let sort_points list = List.sort (fun {depth = d1;_} {depth = d2;_} -> compare d1 d2) list
-    
+
   let is_observe_face plane normal = V.dot plane.Mesh.Facet.normal normal >= 0.0
   (* Check the plane to be equal direction for normal. *)
 
@@ -31,7 +31,7 @@ module Base = struct
   *)
   let get_plane_closest_points (axis, _) body_a body_b trans_mat =
     let shapes = body_a.RI.collidable.Collidable.shapes in
-    let open Candyvec.Std.Matrix4.Open in
+    let open Candyvec.Std.Matrix.Open in
     let world_b =
       let world_a = RI.get_world_transform body_a in
       RI.get_world_transform body_b *|> MU.force_inverse world_a *|> trans_mat in
@@ -71,7 +71,7 @@ module Base = struct
   let get_edge_closest_points (axis, _)
       (body_a : RigidBodyInfo.t) (body_b : RigidBodyInfo.t) (trans_mat : M.t): t list =
     let shapes = body_a.RI.collidable.Collidable.shapes in
-    let open Candyvec.Std.Matrix4.Open in
+    let open Candyvec.Std.Matrix.Open in
     let world_b =
       let world_a = RI.get_world_transform body_a in
       RI.get_world_transform body_b *|> MU.force_inverse world_a *|> trans_mat in
@@ -113,7 +113,7 @@ module Base = struct
       | [] -> None
       | points -> Some (sort_points points |> List.hd)
     ) shapes in
-    O.option_map id contacts 
+    O.option_map id contacts
 end
 
 let get_inverse_translation axis dist =
@@ -132,7 +132,7 @@ let get_closest_point (axis, dist) body_a body_b =
   let point = List.concat [edge_base_closests;
                      a_plane_base_closests;
                      b_plane_base_closests] |> Base.sort_points |> List.hd in
-  let open Candyvec.Std.Matrix4.Open in
+  let open Candyvec.Std.Matrix.Open in
   {point with Base.point_b = point.Base.point_b *||> reverse_mat}
-  
+
 include Base

@@ -5,21 +5,22 @@
    @version 0.1
 *)
 
-
 (**
    Contain for solving constraint between rigid bodies.
 *)
 module SolverBody : sig
 
   (** type of the SolverBody module  *)
-  type t = {delta_linear_velocity: Candyvec.Vector.t;
-            delta_angular_velocity: Candyvec.Vector.t;
-            orientation:Candyvec.Quaternion.t;
-            inertia_inv:Candyvec.Matrix3.t;
-            mass_inv:float;
-           }
+  type t = {
+    delta_linear_velocity: Candyvec.Vector.t;
+    delta_angular_velocity: Candyvec.Vector.t;
+    orientation:Candyvec.Quaternion.t;
+    inertia_inv:Candyvec.Matrix.t;
+    mass_inv:float;
+    accum_impulse : float;
+  }
 
-  (** Get empty solver body  *)
+  (** Get new empty solver body  *)
   val empty: t
 
   (** Set up new solver body with a state of the rigid body *)
@@ -40,4 +41,4 @@ val solve : solver_info -> solver_info -> Contact.t -> Engine_option.engine_opti
   solver_info * solver_info
 
 (** return new Contact that is updated to be updating constraints of given Contact  *)
-val update_constraint : Contact.t -> Contact.t
+val update_constraint : Contact.t -> SolverBody.t -> Contact.t

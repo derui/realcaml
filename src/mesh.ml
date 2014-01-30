@@ -21,7 +21,7 @@ end
 open Sugarpot.Std.Prelude
 
 module V = Candyvec.Vector
-module MT = Candyvec.Matrix4
+module MT = Candyvec.Matrix
 
 module M = Sugarpot.Std.Map.Make(struct
   type t = int * int
@@ -55,7 +55,6 @@ let is_degenerate vertices ((aa, ab), (ba, bb), (ca, cb)) =
   else if abs_float (V.dot edge_b (V.invert edge_a)) = 1.0 then true
   else if abs_float (V.dot edge_c (V.invert edge_b)) = 1.0 then true
   else false
-;;
 
 let array_find ary f =
   let len = Array.length ary in
@@ -66,11 +65,8 @@ let array_find ary f =
     else
       loop ary (succ index) f in
   loop ary 0 f
-;;
-
 
 let edges_of_face (ai, bi, ci) = ((ai, bi), (bi, ci), (ci, ai))
-;;
 
 let convert_edges vertices faces =
   let edge_buf = ref M.empty in
@@ -91,11 +87,9 @@ let convert_edges vertices faces =
   Array.iteri (fun i e ->
     edge_buf := register_face_edges !edge_buf i (edges_of_face e)) faces;
   !edge_buf
-;;
 
 let equal_edge (e1, e2) (e21, e22) =
   (e1 = e21 && e2 = e22) || (e2 = e21 && e1 = e22)
-;;
 
 (* Get faces what include the edge is given *)
 let get_faces_contain_edge faces edge =
@@ -103,7 +97,6 @@ let get_faces_contain_edge faces edge =
     let ea, eb, ec = edges_of_face face in
     List.for_all (equal_edge edge) [ea;eb;ec]
   ) faces
-;;
 
 let make_edge_buf faces =
   List.fold_left (fun buf (i, face) ->
@@ -123,8 +116,6 @@ let make_edge_buf faces =
     in
     List.fold_left register_face_edge buf [ea; eb; ec]
   ) M.empty faces
-;;
-
 
 let convert ~vertices ~faces =
   (* TODO 縮退面を事前に削除する。 *)
@@ -168,7 +159,6 @@ let convert ~vertices ~faces =
       {Facet.vertex_ids = (va, vb, vc); edge_ids = (ea, eb, ec);normal}
   ) faces in
   {vertices = vertices; edges = edge_ary; facets = Array.of_list faces;}
-;;
 
 let transform_vertices mesh mat =
   let new_vertices = Array.map (fun vec -> MT.mult_vec ~mat ~vec) mesh.vertices in

@@ -1,19 +1,20 @@
 type motion = Active | Static
 
-open Candyvec.Std
+module V = Candyvec.Std.Vector
+module Q = Candyvec.Std.Quaternion
 
 type t = {
-  pos:Vector.t;
-  orientation:Quaternion.t;
-  linear_velocity:Vector.t;
-  angular_velocity:Vector.t;
+  pos:V.t;
+  orientation:Q.t;
+  linear_velocity:V.t;
+  angular_velocity:V.t;
   motion_type:motion;
 }
 
 let empty =
-  {pos = Vector.zero ; orientation = Quaternion.identity;
-   linear_velocity = Vector.zero;
-   angular_velocity = Vector.zero;
+  {pos = V.zero ; orientation = Q.identity;
+   linear_velocity = V.zero;
+   angular_velocity = V.zero;
    motion_type = Static}
 
 let to_world_transform {pos;orientation;_} =

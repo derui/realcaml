@@ -11,7 +11,7 @@ type separating_type = Edge             (* Edge to edge *)
                        | BPlane         (* A plane of the body B *)
 type separating_axis = separating_type * V.t * depth
 
-type mesh_info = Mesh.t * Candyvec.Std.Matrix4.t
+type mesh_info = Mesh.t * Candyvec.Std.Matrix.t
 
 module Base = struct
   (* TRANSLATE: ある軸上にメッシュを投影した場合の最大値と最小値を取得する *)
@@ -44,8 +44,8 @@ let breakable_fold ary f init =
 (* TRANSLATE: AとBの間に、sep_axisを分離軸として分離平面が存在するかどうかを調べる *)
 let is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_axis =
   let open Sugarpot.Std.Option.Open in
-  Matrix4.inverse world_b >>= (fun inversed -> 
-    let open Candyvec.Std.Matrix4.Open in
+  Matrix.inverse world_b >>= (fun inversed ->
+    let open Candyvec.Std.Matrix.Open in
     (* TRANSLATE: Aのローカル座標系からBのローカル座標形への変換行列 *)
     let trans_a2b = world_a *|> inversed in
 
@@ -69,7 +69,7 @@ let face_intersect (shape_a, world_a) (shape_b, world_b) (styp, axis, dist) sept
     | BPlane -> shape_b.Shape.mesh.Mesh.facets
     | _ -> failwith "face_intersect allowed only APlane or BPlane separation type"
   in
-  let mesh_a = shape_a.Shape.mesh 
+  let mesh_a = shape_a.Shape.mesh
   and mesh_b = shape_b.Shape.mesh in
   let per_face (styp, axis, dist) face =
     let sep_axis = face.Mesh.Facet.normal in
@@ -81,10 +81,10 @@ let face_intersect (shape_a, world_a) (shape_b, world_b) (styp, axis, dist) sept
 
 (* TRANSLATE: 各エッジ同士の外積を分離軸として判定する。 *)
 let edge_intersect (shape_a, world_a) (shape_b, world_b) (styp, axis, dist) =
-  let mesh_a = shape_a.Shape.mesh 
+  let mesh_a = shape_a.Shape.mesh
   and mesh_b = shape_b.Shape.mesh in
   let vertices_a = mesh_a.Mesh.vertices
-  and vertices_b = mesh_b.Mesh.vertices 
+  and vertices_b = mesh_b.Mesh.vertices
   and edges_a = mesh_a.Mesh.edges
   and edges_b = mesh_b.Mesh.edges in
   let edge_to_vec edge vertices =
@@ -92,13 +92,13 @@ let edge_intersect (shape_a, world_a) (shape_b, world_b) (styp, axis, dist) =
     Vector.sub vertices.(second) vertices.(first) in
 
   let module V = Candyvec.Std.Vector in
-  let open Candyvec.Std.Matrix4.Open in
+  let open Candyvec.Std.Matrix.Open in
   let open Sugarpot.Std.Option.Open in
   breakable_fold edges_a (fun (styp, axis, dist) edge ->
     let edge_a = edge_to_vec edge vertices_a in
     breakable_fold edges_b (fun (styp, axis, dist) edge ->
       let edge_b = edge_to_vec edge vertices_b in
-      let separation = Matrix4.inverse world_a >>= (fun inverse ->
+      let separation = Matrix.inverse world_a >>= (fun inverse ->
         let edge_b = edge_b *||> world_b *||> inverse in
         let sep_axis = Vector.cross edge_a edge_b |> Vector.normalize in
         is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_axis

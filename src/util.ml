@@ -3,5 +3,5 @@
 let world_transform orient vec =
   let open Candyvec in
   let orient = Quaternion.to_matrix orient
-  and trans = Matrix4.translation vec in
-  Matrix4.multiply trans orient
+  and trans = Matrix.translation vec in
+  Matrix.multiply trans orient
