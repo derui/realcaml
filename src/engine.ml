@@ -135,12 +135,15 @@ let narrow_phase engine =
       match is_separate body_a body_b  with
       (* TRANSLATE: APlaneの場合、body Aを基準として判定する。  *)
       | Some (APlane, axis, dist) ->
+        Printf.printf "axis via A Plane : %s\n" (V.to_string axis);
         Some(ClosestPoint.get_closest_point (axis, dist) body_a body_b)
       (* TRANSLATE: BPlaneの場合、body Bを基準として判定する。  *)
       | Some (BPlane, axis, dist) ->
+        Printf.printf "axis via B Plane : %s\n" (V.to_string axis);
         Some(ClosestPoint.get_closest_point (axis, dist) body_b body_a)
       (* TRANSLATE: Edgeの場合、body Aを基準として判定する。  *)
       | Some (Edge, axis, dist) ->
+        Printf.printf "axis via Edge : %s\n" (V.to_string axis);
         Some(ClosestPoint.get_closest_point (axis, dist) body_a body_b)
     (* wTRANSLATE: 分離平面が存在する場合には、このペアに対して何も行わない *)
       | None -> None

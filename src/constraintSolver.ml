@@ -66,7 +66,7 @@ let calc_restriction bodyA bodyB = function
   | Pair.New ->
     let open RigidBodyInfo in
     let open RigidBody in
-    0.5 *. bodyA.body.friction *. bodyB.body.friction
+    0.5 *. (bodyA.body.friction +. bodyB.body.friction)
   | _ -> 0.0
 
 let calc_k (bodyA, solverA) (bodyB, solverB) cp =
@@ -104,12 +104,16 @@ let setup_constraint (bodyA, solverA) (bodyB, solverB) contact pair_type opt =
     let open M.Open in
     let open Engine_option in
     let setup axis = let denom = V.dot (axis *||> k) axis in
+                     Printf.printf "denom : %f\n" denom;
+                     Printf.printf "relative_velocity : %s\n" (V.to_string relative_velocity);
                      let rhs = -.(1.0 +. restriction) *. (relative_velocity *@ axis) in
+                     Printf.printf "rhs: %f\n" rhs;
                      let rhs = rhs -.
                        (opt.contact_bias *. min 0.0 cp.ContactPoint.distance) /. opt.time_step in
-                     let rhs = rhs *. 1.0 /. denom in
+                     let jac_diag_inv = 1.0 /. denom in
+                     let rhs = rhs *. jac_diag_inv in
                      {Constraint.axis;
-                      jac_diag_inv = 1.0 /. denom;
+                      jac_diag_inv;
                       rhs; lower_limit = 0.0;
                       upper_limit = max_float;
                       accum_impulse = 0.0
@@ -117,7 +121,6 @@ let setup_constraint (bodyA, solverA) (bodyB, solverB) contact pair_type opt =
     let vec = V.add cp.normal ({V.x = 1.0;y = 0.0;z = 0.0} +@ cp.normal) in
     let tangent1 = V.normalize (cp.normal **@ vec) in
     let tangent2 = V.normalize (tangent1 **@ cp.normal) in
-    Printf.printf "contact point normal : %s\n" |< V.to_string cp.normal;
     let constraint1 = setup cp.normal
     and constraint2 = setup tangent1
     and constraint3 = setup tangent2 in
@@ -131,7 +134,9 @@ module Solver = struct
     let open V.Open in
     let jac = ct.Constraint.jac_diag_inv
     and axis = ct.Constraint.axis in
+    Printf.printf "impulse %f\n" impulse;
     let impulse = impulse -. jac *. (axis *@ (va -@ vb)) in
+    Printf.printf "impulse %f\n" impulse;
 
     let low_lim = ct.Constraint.lower_limit
     and up_lim = ct.Constraint.upper_limit in

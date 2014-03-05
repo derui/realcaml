@@ -94,6 +94,7 @@ module Base = struct
             let edge_a = edge_to_segment shape.Shape.mesh.Mesh.vertices edge_a
             and edge_b = edge_to_segment mesh_b.Mesh.vertices edge_b in
             let e1, e2 = Candyvec.Segment.closest edge_a edge_b in
+            Printf.printf "closests : %s %s %s\n" (V.to_string axis) (V.to_string e1) (V.to_string e2);
             { normal = axis;
               point_a = e1;
               point_b = e2;
@@ -120,7 +121,7 @@ let get_inverse_translation axis dist =
   M.translation (V.invert |< V.scale ~v:axis ~scale:(dist *. 1.1))
 
 let get_reverse_translation axis dist =
-  M.translation (V.invert |< V.scale ~v:axis ~scale:(dist *. 1.1))
+  M.translation (V.scale ~v:axis ~scale:(dist *. 1.1))
 
 (* TRANSLATE: 二つのbodyにおける最近接点を取得する。 *)
 let get_closest_point (axis, dist) body_a body_b =
@@ -130,9 +131,10 @@ let get_closest_point (axis, dist) body_a body_b =
   let b_plane_base_closests = Base.get_plane_closest_points (axis, dist) body_b body_a offset_mat in
   let edge_base_closests = Base.get_edge_closest_points (axis, dist) body_a body_b offset_mat in
   let point = List.concat [edge_base_closests;
-                     a_plane_base_closests;
-                     b_plane_base_closests] |> Base.sort_points |> List.hd in
+                           a_plane_base_closests;
+                           b_plane_base_closests] |> Base.sort_points |> List.hd in
   let open Candyvec.Std.Matrix.Open in
-  {point with Base.point_b = point.Base.point_b *||> reverse_mat}
+  let point_b =point.Base.point_b *||> reverse_mat in
+  {point with Base.point_b = point_b; depth =  dist}
 
 include Base
