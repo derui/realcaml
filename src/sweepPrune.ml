@@ -1,6 +1,6 @@
 open Sugarpot.Std.Prelude
 module RBI = RigidBodyInfo
-module M = Candyvec.Matrix4
+module M = Candyvec.Matrix
 module Q = Candyvec.Quaternion
 
 type t = {
@@ -19,7 +19,7 @@ let add prune info =
 ;;
 
 let vec_to_translated v world =
-  let open Candyvec.Matrix4 in
+  let open Candyvec.Matrix in
   let module V = Candyvec.Vector in
   let trans = multiply (translation v) world in
   mult_vec ~vec:V.zero ~mat:trans

@@ -1,8 +1,8 @@
 open Sugarpot.Std.Prelude
 module V = Candyvec.Std.Vector
 module RI = RigidBodyInfo
-module M = Candyvec.Std.Matrix4
-module MU = Candyvec.Std.Matrix
+module M = Candyvec.Std.Matrix
+module MU = Candyvec.Std.Matrix_util
 
 type t = {
   contact_num:int;
@@ -46,9 +46,13 @@ let calc_next_contact contact next_list =
 let update_contact_points ~contact ~body_a ~body_b ~closest =
   (* TRANSLATE: 最近接点をpairに追加する。 *)
   let point = closest in
-  let open Candyvec.Std.Matrix4.Open in
+  let open Candyvec.Std.Matrix.Open in
   let world_a = RI.get_world_transform body_a in
   let world_b = world_a *|> (RI.get_world_transform body_b |> MU.force_inverse) in
+  Printf.printf "depth %f \n" closest.ClosestPoint.depth;
+  Printf.printf "point A %s \n" (V.to_string closest.ClosestPoint.point_a);
+  Printf.printf "point B %s \n" (V.to_string closest.ClosestPoint.point_b);
+  Printf.printf "normal %s \n" (V.to_string closest.ClosestPoint.normal);
 
   let new_point = {ContactPoint.empty with ContactPoint.distance = closest.ClosestPoint.depth;
                    pointA = point.ClosestPoint.point_a; pointB = point.ClosestPoint.point_b *||> world_b;

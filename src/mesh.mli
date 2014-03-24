@@ -40,4 +40,4 @@ type t = {
 val convert: vertices:Candyvec.Vector.t array -> faces:(int * int * int) array -> t
 
 (** Return new mesh is transformed by given transformation matrix. *)
-val transform_vertices: t -> Candyvec.Matrix4.t -> t
+val transform_vertices: t -> Candyvec.Matrix.t -> t

@@ -1,6 +1,6 @@
 module C = Realcamel.ClosestPoint
 module V = Candyvec.Std.Vector
-module Mat = Candyvec.Std.Matrix4
+module Mat = Candyvec.Std.Matrix
 module Q = Candyvec.Std.Quaternion
 module M = Realcamel.Mesh
 module Voronoi = Realcamel.Voronoi

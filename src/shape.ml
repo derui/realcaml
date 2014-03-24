@@ -7,6 +7,6 @@ type t = {
 }
 
 let offset_transform {offset_pos; offset_orientation;_} =
-  let trans_mat = Matrix4.translation offset_pos
+  let trans_mat = Matrix.translation offset_pos
   and orient_mat = Quaternion.to_matrix offset_orientation in
-  Matrix4.multiply trans_mat orient_mat
+  Matrix.multiply trans_mat orient_mat

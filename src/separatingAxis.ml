@@ -4,6 +4,8 @@ open Candyvec.Std
 
 module R = RigidBodyInfo
 module V = Vector
+module M = Matrix
+module MU = Matrix_util
 
 type depth = float
 type separating_type = Edge             (* Edge to edge *)
@@ -11,7 +13,7 @@ type separating_type = Edge             (* Edge to edge *)
                        | BPlane         (* A plane of the body B *)
 type separating_axis = separating_type * V.t * depth
 
-type mesh_info = Mesh.t * Candyvec.Std.Matrix4.t
+type mesh_info = Mesh.t * Candyvec.Std.Matrix.t
 
 module Base = struct
   (* TRANSLATE: ある軸上にメッシュを投影した場合の最大値と最小値を取得する *)
@@ -44,21 +46,24 @@ let breakable_fold ary f init =
 (* TRANSLATE: AとBの間に、sep_axisを分離軸として分離平面が存在するかどうかを調べる *)
 let is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_axis =
   let open Sugarpot.Std.Option.Open in
-  Matrix4.inverse world_b >>= (fun inversed -> 
-    let open Candyvec.Std.Matrix4.Open in
+  Matrix.inverse world_b >>= (fun inversed ->
+    let open Candyvec.Std.Matrix.Open in
     (* TRANSLATE: Aのローカル座標系からBのローカル座標形への変換行列 *)
     let trans_a2b = world_a *|> inversed in
-
     let sep_axisb = sep_axis *||> trans_a2b |> V.normalize in
-    let offset_vec = V.sub sep_axis sep_axisb in
+    let inverse_a = MU.force_inverse world_a in
+    let offset_on_a = M.get_trans world_b *||> inverse_a in
+
     (* TRANSLATE: shape_bをAのローカル座標系に変換すると、演算負荷が高いため、
        分離軸をBのローカル座標として扱い、取得した値をAのローカル座標系に
        換算することで、演算負荷を抑えることができる。
     *)
-    let offset = Vector.dot offset_vec sep_axis in
+    let offset = V.dot offset_on_a sep_axis in
     let (amax, amin) = Base.get_maximum_range sep_axis mesh_a.Mesh.vertices
     and (bmax, bmin) = Base.get_maximum_range sep_axisb mesh_b.Mesh.vertices in
     let (bmax, bmin) = (bmax +. offset, bmin +. offset) in
+    Printf.printf "(amax, amin) (bmax, bmin) : (%f, %f) (%f, %f)" amax amin bmax bmin;
+    Printf.printf "sep_axis %s\n" (V.to_string sep_axis);
     Base.detect_separation sep_axis (amax, amin) (bmax, bmin)
   )
 
@@ -69,7 +74,7 @@ let face_intersect (shape_a, world_a) (shape_b, world_b) (styp, axis, dist) sept
     | BPlane -> shape_b.Shape.mesh.Mesh.facets
     | _ -> failwith "face_intersect allowed only APlane or BPlane separation type"
   in
-  let mesh_a = shape_a.Shape.mesh 
+  let mesh_a = shape_a.Shape.mesh
   and mesh_b = shape_b.Shape.mesh in
   let per_face (styp, axis, dist) face =
     let sep_axis = face.Mesh.Facet.normal in
@@ -81,10 +86,10 @@ let face_intersect (shape_a, world_a) (shape_b, world_b) (styp, axis, dist) sept
 
 (* TRANSLATE: 各エッジ同士の外積を分離軸として判定する。 *)
 let edge_intersect (shape_a, world_a) (shape_b, world_b) (styp, axis, dist) =
-  let mesh_a = shape_a.Shape.mesh 
+  let mesh_a = shape_a.Shape.mesh
   and mesh_b = shape_b.Shape.mesh in
   let vertices_a = mesh_a.Mesh.vertices
-  and vertices_b = mesh_b.Mesh.vertices 
+  and vertices_b = mesh_b.Mesh.vertices
   and edges_a = mesh_a.Mesh.edges
   and edges_b = mesh_b.Mesh.edges in
   let edge_to_vec edge vertices =
@@ -92,15 +97,15 @@ let edge_intersect (shape_a, world_a) (shape_b, world_b) (styp, axis, dist) =
     Vector.sub vertices.(second) vertices.(first) in
 
   let module V = Candyvec.Std.Vector in
-  let open Candyvec.Std.Matrix4.Open in
+  let open Candyvec.Std.Matrix.Open in
   let open Sugarpot.Std.Option.Open in
   breakable_fold edges_a (fun (styp, axis, dist) edge ->
     let edge_a = edge_to_vec edge vertices_a in
     breakable_fold edges_b (fun (styp, axis, dist) edge ->
       let edge_b = edge_to_vec edge vertices_b in
-      let separation = Matrix4.inverse world_a >>= (fun inverse ->
-        let edge_b = edge_b *||> world_b *||> inverse in
-        let sep_axis = Vector.cross edge_a edge_b |> Vector.normalize in
+      let separation = Matrix.inverse world_a >>= (fun inverse ->
+        let edge_b = edge_b *||> (inverse *|> world_b) in
+        let sep_axis = (Vector.cross edge_b edge_a) |> Vector.normalize in
         is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_axis
       ) in
       match separation with
@@ -137,6 +142,6 @@ let judge_intersect ~body_a ~body_b =
       *)
       (face_intersect shape_a shape_b sep_init APlane) >>=
         (fun sep_axis ->
-          face_intersect shape_a shape_b sep_axis BPlane) >>=
+          face_intersect shape_b shape_a sep_axis BPlane) >>=
         (fun sep_axis -> edge_intersect shape_a shape_b sep_axis) in
   intersect_loop 0 0

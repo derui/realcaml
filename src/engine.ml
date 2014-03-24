@@ -14,7 +14,7 @@ type t = {
 
 
 module RI = RigidBodyInfo
-module M = Candyvec.Std.Matrix4
+module M = Candyvec.Std.Matrix
 module V = Candyvec.Std.Vector
 module Q = Candyvec.Std.Quaternion
 module EO = Engine_option
@@ -50,7 +50,7 @@ let intersect_bodies engine =
   let pairs = engine.pair.(swap) in
   let rec intersect_loop sp pairs base_count other_count =
     if base_count >= max_count then pairs
-    else if base_count = other_count then 
+    else if base_count = other_count then
       intersect_loop sp pairs base_count (succ base_count)
     else if other_count >= max_count then
       intersect_loop sp pairs (succ base_count) (base_count + 2)
@@ -104,14 +104,6 @@ let broad_phase engine =
   engine.pair_count.(swap) <- count;
   engine
 
-let simple_inverse m =
-  let module MU = Candyvec.Std.Matrix in
-  let mat3 = MU.to_3x3 m |> Candyvec.Matrix3.transpose
-  and vec = M.get_trans m |> V.invert in
-  let trans = M.translation vec
-  and rotate = MU.replace_3x3 m mat3 in
-  M.multiply trans rotate
-
 let update_contact_points bodies closest pair =
   (* TRANSLATE: 最近接点をpairに追加する。 *)
   let body_a = bodies.(Int32.to_int pair.Pair.indexA)
@@ -143,23 +135,24 @@ let narrow_phase engine =
       match is_separate body_a body_b  with
       (* TRANSLATE: APlaneの場合、body Aを基準として判定する。  *)
       | Some (APlane, axis, dist) ->
-        print_string "APlane \n";
+        Printf.printf "axis via A Plane : %s\n" (V.to_string axis);
         Some(ClosestPoint.get_closest_point (axis, dist) body_a body_b)
       (* TRANSLATE: BPlaneの場合、body Bを基準として判定する。  *)
       | Some (BPlane, axis, dist) ->
-        print_string "BPlane \n";
+        Printf.printf "axis via B Plane : %s\n" (V.to_string axis);
         Some(ClosestPoint.get_closest_point (axis, dist) body_b body_a)
       (* TRANSLATE: Edgeの場合、body Aを基準として判定する。  *)
       | Some (Edge, axis, dist) ->
+        Printf.printf "axis via Edge : %s\n" (V.to_string axis);
         Some(ClosestPoint.get_closest_point (axis, dist) body_a body_b)
     (* wTRANSLATE: 分離平面が存在する場合には、このペアに対して何も行わない *)
-      | None -> print_string "separation None\n"; None
+      | None -> None
   in
 
   let updated_pair = Array.mapi (fun index pair ->
     match pair.Pair.pair_type with
     | Pair.Empty -> pair
-    | _ -> 
+    | _ ->
       match solve_contact_point index pair with
       | None -> pair
       | Some closest_point ->
@@ -167,6 +160,15 @@ let narrow_phase engine =
   ) current_pair in
   engine.pair.(engine.pair_swap) <- updated_pair;
   engine
+
+let map_bodies ~f ~motion ary =
+  Array.map (function
+  | None -> None
+  | Some sp ->
+    match motion sp with
+    | State.Active -> Some(f sp)
+    | State.Static -> Some sp
+  ) ary
 
 (* do solve constarints *)
 let solve_constraints engine =
@@ -181,7 +183,7 @@ let solve_constraints engine =
   let update_contact pair =
     match pair.Pair.pair_type with
     | Pair.Empty -> pair
-    | _ -> 
+    | _ ->
       match (solver_set pair.Pair.indexA, solver_set pair.Pair.indexB) with
       | ((None, _) | (_, None)) -> pair
       | (Some(solv_a), Some(solv_b)) ->
@@ -192,7 +194,7 @@ let solve_constraints engine =
   let do_solve pair =
     match pair.Pair.pair_type with
     | Pair.Empty -> ()
-    | _ -> 
+    | _ ->
       match (solver_set pair.Pair.indexA, solver_set pair.Pair.indexB) with
       | ((None, _) | (_, None)) -> ()
       | (Some(solv_a), Some(solv_b)) ->
@@ -203,10 +205,10 @@ let solve_constraints engine =
         solver_bodies.(indA) <- Some(bodyA, solverA);
         solver_bodies.(indB) <- Some(bodyB, solverB) in
 
-  let update_velocity ind body =
+  let update_velocity body =
     match body with
     | None -> None
-    | Some((body,  solver)) ->
+    | Some(body,  solver) ->
       let state = body.RI.state in
       let module S = ConstraintSolver.SolverBody in
       let linear = V.add state.State.linear_velocity solver.S.delta_linear_velocity
@@ -221,7 +223,7 @@ let solve_constraints engine =
   (* TRANSLATE 各pairについて、拘束力の演算を行う *)
   Array.iter do_solve current_pair;
   (* TRANSLATE 算出した拘束力を更新する *)
-  let bodies = Array.mapi update_velocity solver_bodies in
+  let bodies = Array.map update_velocity solver_bodies in
 
   (* TRANSLATE 更新したSweepPluneを、engineに再度設定する *)
   engine.pair.(engine.pair_swap) <- current_pair;
@@ -232,15 +234,6 @@ let get_current_pair engine =
   and pairs = engine.pair in
   pairs.(swap)
 
-let map_bodies ~f ary =
-  Array.map (function
-  | None -> None
-  | Some sp ->
-    match sp.RI.state.State.motion_type with
-    | State.Active -> Some(f sp)
-    | State.Static -> Some sp
-  ) ary
-
 let update_bodies engine =
   (* TRANSLATE: 算出した速度を、各剛体に反映する' *)
   let time_step = engine.engine_option.EO.time_step
@@ -249,20 +242,21 @@ let update_bodies engine =
   let calc_delta_orientation angular time_step =
     let angular = V.scale ~v:angular ~scale:time_step in
     let axis = V.scale ~v:angular ~scale:(1.0 /. V.norm angular) in
-    Q.make ~angle:(cos |< V.norm angular) ~vec:(V.scale ~v:axis ~scale:(sin |< V.norm angular)) in
+    Q.make ~angle:(V.norm angular) ~vec:axis in
 
   let update_state_position ri =
     let state = ri.RI.state in
     let pos = state.State.pos in
     Printf.printf "linear velocity : %s\n" (V.to_string state.State.linear_velocity);
     let state = {state with State.pos = V.add pos (V.scale ~scale:time_step ~v:state.State.linear_velocity)} in
-    Printf.printf "pos: %s\n" (V.to_string state.State.pos);
     let delta = calc_delta_orientation state.State.angular_velocity time_step in
     let state = {state with State.orientation = Q.multiply state.State.orientation delta} in
     {ri with RI.state = state} in
 
   {engine with sweep_prune = {
-    engine.sweep_prune with SweepPrune.bodies = map_bodies ~f:update_state_position bodies}
+    engine.sweep_prune with SweepPrune.bodies = map_bodies ~f:update_state_position ~motion:(fun sp ->
+      sp.RI.state.State.motion_type
+    ) bodies}
   }
 
 (* 各剛体に重力の形で外力を与える。それぞれの剛体は並進運動を行う *)
@@ -273,13 +267,16 @@ let apply_gravity engine =
       match body with
       | None -> None
       | Some body ->
-        let mass = body.RI.body.RigidBody.mass in
-        let gravity = engine.engine_option.EO.gravity
-        and time_step = engine.engine_option.EO.time_step in
-        let force = V.scale ~v:gravity ~scale:mass in
-        let ri_body, state = Force.apply_force ~body:body.RI.body ~state:body.RI.state
-          ~force ~torque:V.zero ~time_step in
-        Some ({body with RI.state = state; RI.body = ri_body})
+        if State.is_active body.RI.state then
+          let mass = body.RI.body.RigidBody.mass in
+          let gravity = engine.engine_option.EO.gravity
+          and time_step = engine.engine_option.EO.time_step in
+          let force = V.scale ~v:gravity ~scale:mass in
+          let ri_body, state = Force.apply_force ~body:body.RI.body ~state:body.RI.state
+            ~force ~torque:V.zero ~time_step in
+          Some ({body with RI.state = state; RI.body = ri_body})
+        else
+          Some body
     ) bodies in
   {engine with sweep_prune = {
     engine.sweep_prune with SweepPrune.bodies = updated;

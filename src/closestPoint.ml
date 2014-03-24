@@ -1,7 +1,7 @@
 open Sugarpot.Std.Prelude
 module RI = RigidBodyInfo
-module M = Candyvec.Std.Matrix4
-module MU = Candyvec.Std.Matrix
+module M = Candyvec.Std.Matrix
+module MU = Candyvec.Std.Matrix_util
 module V = Candyvec.Std.Vector
 module Q = Candyvec.Std.Quaternion
 
@@ -18,7 +18,7 @@ module Base = struct
   }
 
   let sort_points list = List.sort (fun {depth = d1;_} {depth = d2;_} -> compare d1 d2) list
-    
+
   let is_observe_face plane normal = V.dot plane.Mesh.Facet.normal normal >= 0.0
   (* Check the plane to be equal direction for normal. *)
 
@@ -31,7 +31,7 @@ module Base = struct
   *)
   let get_plane_closest_points (axis, _) body_a body_b trans_mat =
     let shapes = body_a.RI.collidable.Collidable.shapes in
-    let open Candyvec.Std.Matrix4.Open in
+    let open Candyvec.Std.Matrix.Open in
     let world_b =
       let world_a = RI.get_world_transform body_a in
       RI.get_world_transform body_b *|> MU.force_inverse world_a *|> trans_mat in
@@ -58,7 +58,7 @@ module Base = struct
           ) body_b.RI.collidable.Collidable.shapes in
           match points with
           | [] -> None
-          | _ -> Some (List.concat points |> sort_points |> List.rev |> List.hd)
+          | _ -> Some (List.concat points |> sort_points |> List.hd)
         else None
       ) mesh.Mesh.facets
     ) shapes in
@@ -71,7 +71,7 @@ module Base = struct
   let get_edge_closest_points (axis, _)
       (body_a : RigidBodyInfo.t) (body_b : RigidBodyInfo.t) (trans_mat : M.t): t list =
     let shapes = body_a.RI.collidable.Collidable.shapes in
-    let open Candyvec.Std.Matrix4.Open in
+    let open Candyvec.Std.Matrix.Open in
     let world_b =
       let world_a = RI.get_world_transform body_a in
       RI.get_world_transform body_b *|> MU.force_inverse world_a *|> trans_mat in
@@ -92,8 +92,9 @@ module Base = struct
           let mesh_b = transform_mesh world_b shape_b.Shape.mesh in
           let points = Array.to_list |< Array.map (fun edge_b ->
             let edge_a = edge_to_segment shape.Shape.mesh.Mesh.vertices edge_a
-            and edge_b = edge_to_segment shape_b.Shape.mesh.Mesh.vertices edge_b in
-            let (e1, e2) = Candyvec.Segment.closest edge_a edge_b in
+            and edge_b = edge_to_segment mesh_b.Mesh.vertices edge_b in
+            let e1, e2 = Candyvec.Segment.closest edge_a edge_b in
+            Printf.printf "closests : %s %s %s\n" (V.to_string axis) (V.to_string e1) (V.to_string e2);
             { normal = axis;
               point_a = e1;
               point_b = e2;
@@ -102,25 +103,25 @@ module Base = struct
 
           match points with
           | [] -> None
-          | _ -> Some (sort_points points |> List.rev |> List.hd)
+          | _ -> Some (sort_points points |> List.hd)
 
         ) body_b.RI.collidable.Collidable.shapes in
         match O.option_map id points with
         | [] -> None
-        | points -> Some (sort_points points |> List.rev |> List.hd)
+        | points -> Some (sort_points points |> List.hd)
       ) mesh.Mesh.edges in
       match O.option_map id points with
       | [] -> None
-      | points -> Some (sort_points points |> List.rev |> List.hd)
+      | points -> Some (sort_points points |> List.hd)
     ) shapes in
-    O.option_map id contacts 
+    O.option_map id contacts
 end
 
 let get_inverse_translation axis dist =
   M.translation (V.invert |< V.scale ~v:axis ~scale:(dist *. 1.1))
 
 let get_reverse_translation axis dist =
-  M.translation (V.invert |< V.scale ~v:axis ~scale:(dist *. 1.1))
+  M.translation (V.scale ~v:axis ~scale:(dist *. 1.1))
 
 (* TRANSLATE: 二つのbodyにおける最近接点を取得する。 *)
 let get_closest_point (axis, dist) body_a body_b =
@@ -130,9 +131,10 @@ let get_closest_point (axis, dist) body_a body_b =
   let b_plane_base_closests = Base.get_plane_closest_points (axis, dist) body_b body_a offset_mat in
   let edge_base_closests = Base.get_edge_closest_points (axis, dist) body_a body_b offset_mat in
   let point = List.concat [edge_base_closests;
-                     a_plane_base_closests;
-                     b_plane_base_closests] |> Base.sort_points |> List.rev |> List.hd in
-  let open Candyvec.Std.Matrix4.Open in
-  {point with Base.point_b = point.Base.point_b *||> reverse_mat}
-  
+                           a_plane_base_closests;
+                           b_plane_base_closests] |> Base.sort_points |> List.hd in
+  let open Candyvec.Std.Matrix.Open in
+  let point_b =point.Base.point_b *||> reverse_mat in
+  {point with Base.point_b = point_b; depth =  dist}
+
 include Base
