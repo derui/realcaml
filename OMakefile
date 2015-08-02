@@ -35,7 +35,7 @@ INSTALLED = $(BIG_ROOT)/installed
 # If so, define the subdirectory targets and uncomment this section.
 #
 
-LIB = realcamel
+LIB = realcaml
 
 .SUBDIRS: src test
 

@@ -4,19 +4,11 @@ open Core.Std
 
 module Tuple_key = struct
   type t = int * int
-  let t_of_sexp = failwith "not implemented"
-  let sexp_of_t = failwith "not implemented"
-  let compare a b =
-    let comp a b = 
-      let first = Pervasives.compare (fst a) (fst b) in
-      if first = 0 then Pervasives.compare (snd a) (snd b) else first
-    in
-    let default = comp a b
-    and swapped = comp a (Tuple2.swap b) in
-    if default = 0 then default else swapped
+  let t_of_sexp = Tuple2.t_of_sexp Int.t_of_sexp Int.t_of_sexp
+  let sexp_of_t = Tuple2.sexp_of_t Int.sexp_of_t Int.sexp_of_t
+  let compare = Pervasives.compare
 end
 
-module S = Set.Make(Tuple_key)
 module M = Map.Make(Tuple_key)
 
 let max_vertices = 34
@@ -34,18 +26,21 @@ let vertex_of_edge vertices (ai, bi) = (vertices.(ai), vertices.(bi))
 
 (* faceで利用されているエッジを、ユニークなVertexの組み合わせとみなした結果の配列を返す。 *)
 let unique_edges faces =
-  let set = S.empty in
-  let set = Array.fold faces ~init:set ~f:(fun set (a, b, c) ->
-    let s = S.add set a in
-    let s = S.add s b in
-    S.add s c
-  ) in
-  S.to_array set
+  Array.concat_map faces ~f:(fun (a, b, c) -> [|a;b;c|])
+
+
+let find_edge edges vert =
+  match M.find edges vert with
+  | None -> M.find edges (Tuple2.swap vert)
+  | _ as e -> e
 
 (* IDが付与されて生成されたエッジをマップにする *)
 let make_edge_map edges =
-  Array.fold edges ~init:M.empty ~f:(fun map edge ->
-    M.add map ~key:edge.Edge.vertex_ids ~data:edge
+  Array.fold edges ~init:M.empty ~f:(fun m edge ->
+    let vert = edge.Edge.vertex_ids in
+    match find_edge m vert with
+    | None -> M.add m ~key:edge.Edge.vertex_ids ~data:edge
+    | _ -> m
   )
 
 let convert ~vertices ~faces =
@@ -63,9 +58,9 @@ let convert ~vertices ~faces =
   let faces = Array.map faces ~f:(fun (index, face) ->
     let (ea, eb, ec) = Facet.edges_of_face face in
 
-    let ea = M.find edges ea
-    and eb = M.find edges eb
-    and ec = M.find edges ec in
+    let ea = find_edge edges ea
+    and eb = find_edge edges eb
+    and ec = find_edge edges ec in
     match (ea, eb, ec) with
     | (None,_,_) | (_,None,_) | (_,_,None) -> failwith "not found some edge of face"
     | (Some ea, Some eb, Some ec) ->
@@ -79,5 +74,5 @@ let convert ~vertices ~faces =
         normal}
   ) in
   {vertices = vertices;
-   edges = M.to_alist edges |> List.map ~f:snd |> Array.of_list;
+   edges = M.data edges |> Array.of_list;
    facets = faces}

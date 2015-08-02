@@ -14,7 +14,7 @@ type t = {
   normal: normal;
 }
 
-let empty () = {
+let empty = {
   facet_id = -1;
   vertex_ids = (0,0,0);
   edge_ids = (0,0,0);
