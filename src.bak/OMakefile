@@ -10,7 +10,7 @@
 # If so, define the subdirectory targets and uncomment this section.
 #
 
-.SUBDIRS: mesh
+# .SUBDIRS:
 
 ################################################
 # Configuration.  You may want to modify any of these configuration
@@ -23,7 +23,6 @@
 USE_OCAMLFIND = true
 #
 OCAMLPACKS[] =
-    core
     typedvec
     typedvec_ext
 #
@@ -60,6 +59,8 @@ OCAMLOPTFLAGS += -g
 #
 
 FILES[] = $(removesuffix $(ls *ml))
+#
+LIB = realcaml
 #
 MyOCamlPackage($(LIB), $(FILES), $(EMPTY), -linkall, true)
 

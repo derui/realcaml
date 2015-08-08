@@ -33,6 +33,16 @@ let%spec "Mesh can convert vertices and faces to mesh" =
   let facet_vertices = facets.(0).Facet.vertex_ids in
   facet_vertices [@eq (0, 1, 2)]
 
+let%spec "Mesh must have mapping for edge-face relations" =
+  let mesh = Mesh.convert ~vertices ~faces in
+  let face = mesh.Mesh.facets.(0) in
+  let mapping = mesh.Mesh.edge_facet_map in
+  let module M = Edge_facet_map in
+  let (ea, eb, ec) = face.Facet.edge_ids in
+  let edge_to_length edge = M.find ~edge mapping |> List.length in
+  let facets = List.sort compare [edge_to_length ea;edge_to_length eb;edge_to_length ec] in
+  facets [@eq [1;1;2]]
+
 let base_vertices =
   [| to_vert ~x:0.0 ~y:1.0 ~z:0.0 ();
      to_vert ~x:(-1.0) ~y:0.0 ~z:1.0 ();

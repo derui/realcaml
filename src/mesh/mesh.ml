@@ -20,6 +20,7 @@ type t = {
   edges: Edge.t array;
   vertices: Types.vertex array;
   facets: Facet.t array;
+  edge_facet_map: Edge_facet_map.t
 }
 
 let vertex_of_edge vertices (ai, bi) = (vertices.(ai), vertices.(bi))
@@ -73,6 +74,8 @@ let convert ~vertices ~faces =
         edge_ids = (ea.edge_id, eb.edge_id, ec.edge_id);
         normal}
   ) in
-  {vertices = vertices;
-   edges = M.data edges |> Array.of_list;
-   facets = faces}
+  let edges = M.data edges |> Array.of_list in
+  {vertices; edges;
+   facets = faces;
+   edge_facet_map = Edge_facet_map.make ~edges ~facets:faces ();
+  }

@@ -10,6 +10,7 @@ type t = {
   edges: Edge.t array;
   vertices: Types.vertex array;
   facets: Facet.t array;
+  edge_facet_map: Edge_facet_map.t
 }
 
 (** Convert vertices and vertex indexed faces. Given original data must necessary
