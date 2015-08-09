@@ -11,9 +11,9 @@ type t = {
   (** The shapes in given collidable container.  *)
   shapes:Shape.t array;
   (** Center of the AABB *)
-  center: Candyvec.Vector.t;
+  center: Types.vec;
   (** The half size of the AABB from center of it.  *)
-  half_size: Candyvec.Vector.t;
+  half_size: Types.vec;
 }
 
 (** Get empty collidable. *)

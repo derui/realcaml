@@ -8,7 +8,7 @@
 
 (** type of rigid body  *)
 type t = {
-  inertia:Candyvec.Matrix.t;
+  inertia:Types.mat;
   mass:float;
   restitution:float;
   friction:float;

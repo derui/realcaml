@@ -6,12 +6,14 @@
    @author derui
 *)
 
+module M = Realcaml_mesh.Mesh
+
 (** type of shape  *)
 type t = {
-  mesh:Mesh.t;
-  offset_pos:Candyvec.Vector.t;
-  offset_orientation:Candyvec.Quaternion.t;
+  mesh: M.t;
+  offset_pos:Types.vec;
+  offset_orientation:Typedvec.Std.Ext.Qua.t;
 }
 
 (** Get offset transformation matrix of given shape  *)
-val offset_transform : t -> Candyvec.Matrix.t
+val offset_transform : t -> Types.mat

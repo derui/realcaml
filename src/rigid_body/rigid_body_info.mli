@@ -9,7 +9,7 @@
 
 type t = {
   (** The rigid body *)
-  body:RigidBody.t;
+  body:Rigid_body.t;
   (** the collidable information of rigid body *)
   collidable:Collidable.t;
   (** the state of the rigid body *)
@@ -17,10 +17,10 @@ type t = {
 }
 
 (** Get transformation matrix to world coodinates *)
-val get_world_transform: t -> Candyvec.Matrix.t
+val get_world_transform: t -> Types.mat
 
 (** Get position of the RigidBodyInfo *)
-val pos : t -> Candyvec.Vector.t
+val pos : t -> Types.vec
 
 (** Set position of the RigidBodyInfo *)
-val set_pos : t -> Candyvec.Vector.t -> t
+val set_pos : t -> pos:Types.vec -> t

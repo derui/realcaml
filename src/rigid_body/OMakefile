@@ -34,7 +34,7 @@ if $(not $(OCAMLFIND_EXISTS))
 #
 # Include path
 #
-OCAMLINCLUDES += 
+OCAMLINCLUDES += ../../lib/mesh
 
 #
 # Compile native or byte code?
@@ -60,17 +60,17 @@ OCAMLOPTFLAGS +=
 
 FILES[] = $(removesuffix $(ls *ml))
 #
-LIB = realcaml_mesh
+LIB = realcaml_rigid_body
 #
-MyOCamlPackage($(LIB), $(FILES), $(EMPTY), $(EMPTY), true)
+MyOCamlPackage($(LIB), $(FILES), $(EMPTY), -linkall, true)
 
 OUTPUTS=$(OCamlPackageGeneratedFiles $(LIB), false)
 
 lib: $(OUTPUTS)
-	mkdir -p ../../lib/mesh
-	cp $(OUTPUTS) ../../lib/mesh/
+	mkdir -p ../../lib/rigid_body
+	cp $(OUTPUTS) ../../lib/rigid_body
 
-clean: $(OUTPUTS)
-	rm -f ../../lib/mesh/*
+clean:
+	rm -f ../../lib/rigid_body
 
 .DEFAULT: lib

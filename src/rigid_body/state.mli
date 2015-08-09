@@ -9,10 +9,10 @@ type motion = Active | Static
 
 (** Types including some statements of rigid body. *)
 type t = {
-  pos:Candyvec.Std.Vector.t;
-  orientation:Candyvec.Std.Quaternion.t;
-  linear_velocity:Candyvec.Std.Vector.t;
-  angular_velocity:Candyvec.Std.Vector.t;
+  pos:Types.vec;
+  orientation:Typedvec.Std.Ext.Qua.t;
+  linear_velocity:Types.vec;
+  angular_velocity:Types.vec;
   motion_type:motion;
 }
 
@@ -20,7 +20,7 @@ type t = {
 val empty: t
 
 (** Get a transform matrix to convert world coodinate. *)
-val to_world_transform : t -> Candyvec.Std.Matrix.t
+val to_world_transform : t -> Types.mat
 
 (** A shortcut to check motion type of a State. *)
 val is_static : t -> bool
