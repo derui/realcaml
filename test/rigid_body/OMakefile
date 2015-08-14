@@ -31,7 +31,7 @@ open MyOCaml
 # If so, define the subdirectory targets and uncomment this section.
 #
 
-.SUBDIRS: mesh rigid_body
+# .SUBDIRS:
 
 ################################################
 # Configuration.  You may want to modify any of these configuration
@@ -44,10 +44,10 @@ open MyOCaml
 USE_OCAMLFIND = true
 #
 OCAMLPACKS[] =
-    oUnit
+    typedvec
+    ppx_simplespec
     num
-    candyvec
-    sugarpot
+    core
 #    pack1
 #    pack2
 #
@@ -59,7 +59,7 @@ OCAMLPACKS[] =
 #
 # Include path
 #
-OCAMLINCLUDES += ../src
+OCAMLINCLUDES += ../../lib/mesh ../../lib/rigid_body
 
 #
 # Compile native or byte code?
@@ -69,11 +69,11 @@ OCAMLINCLUDES += ../src
 NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
 BYTE_ENABLED = true
 
-OCAML_LIBS += ../src/realcamel
+OCAML_LIBS += ../../lib/mesh/realcaml_mesh ../../lib/rigid_body/realcaml_rigid_body
 #
 # Various options
 #
-OCAMLFLAGS    += -annot -bin-annot -g
+OCAMLFLAGS    += -annot -bin-annot -g -thread
 # OCAMLCFLAGS   +=
 # OCAMLOPTFLAGS +=
 # OCAML_LINK_FLAGS +=
@@ -84,24 +84,12 @@ OCAMLFLAGS    += -annot -bin-annot -g
 # Build an OCaml library
 #
 
-FILES[] = $(removesuffix $(ls *ml))
-#    file1
-#    file2
-#
+PROGRAM=rigid_body_test
 
-TARGET = $(OCamlProgram realcamel_tests, $(removesuffix .ml, $(ls *.ml)))
+TARGET = $(OCamlProgram $(PROGRAM), $(removesuffix .ml, $(ls *.ml)))
 
 .DEFAULT: all $(TARGET) 
 
 test: all $(TARGET)
-	./realcamel_tests
+	./$(PROGRAM)
 
-clean:
-	rm -f $(TARGET)
-	rm -f *.annot
-	rm -f *.cmx
-	rm -f *.cmt
-	rm -f *.cmo
-	rm -f *.cmi
-	rm -f *.cmt
-	rm -f *.o
