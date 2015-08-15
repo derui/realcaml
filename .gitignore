@@ -16,3 +16,14 @@
 
 /build/
 /lib
+.omakedb
+
+*.lock
+
+*.opt
+
+*.run
+
+*.log
+
+*.cache
