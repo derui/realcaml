@@ -1,4 +1,5 @@
 open Core.Std
+module Util = Realcaml_util
 module A = Typedvec.Std.Algebra
 module S = Typedvec.Std.Size
 module V = Typedvec.Std.Algebra.Vec

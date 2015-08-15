@@ -60,17 +60,17 @@ OCAMLOPTFLAGS +=
 
 FILES[] = $(removesuffix $(ls *ml))
 #
-LIB = realcaml_rigid_body
+LIB = realcaml_voronoi
 #
 MyOCamlPackage($(LIB), $(FILES), $(EMPTY), -linkall, true)
 
 OUTPUTS=$(OCamlPackageGeneratedFiles $(LIB), false)
 
 lib: $(OUTPUTS)
-	mkdir -p ../../lib/rigid_body
-	cp $(OUTPUTS) ../../lib/rigid_body
+	mkdir -p ../../lib/voronoi
+	cp $(OUTPUTS) ../../lib/voronoi
 
 clean:
-	rm -f ../../lib/rigid_body
+	rm -f ../../lib/voronoi
 
 .DEFAULT: lib
