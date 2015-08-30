@@ -15,12 +15,13 @@ type t = {
 }
 
 let empty =
+  let module Util = Realcaml_util in
   {pos = Util.Vec.empty; orientation = Q.identity;
    linear_velocity = Util.Vec.empty;
    angular_velocity = Util.Vec.empty;
    motion_type = Static}
 
-let to_world_transform {pos;orientation;_} = Util.to_world_transform pos orientation
+let to_world_transform {pos;orientation;_} = Realcaml_util.Util.to_world_transform pos orientation
 
 let is_static {motion_type;_} =
   match motion_type with

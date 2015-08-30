@@ -49,10 +49,6 @@ let update_contact_points ~contact ~body_a ~body_b ~closest =
   let open Candyvec.Std.Matrix.Open in
   let world_a = RI.get_world_transform body_a in
   let world_b = world_a *|> (RI.get_world_transform body_b |> MU.force_inverse) in
-  Printf.printf "depth %f \n" closest.ClosestPoint.depth;
-  Printf.printf "point A %s \n" (V.to_string closest.ClosestPoint.point_a);
-  Printf.printf "point B %s \n" (V.to_string closest.ClosestPoint.point_b);
-  Printf.printf "normal %s \n" (V.to_string closest.ClosestPoint.normal);
 
   let new_point = {ContactPoint.empty with ContactPoint.distance = closest.ClosestPoint.depth;
                    pointA = point.ClosestPoint.point_a; pointB = point.ClosestPoint.point_b *||> world_b;

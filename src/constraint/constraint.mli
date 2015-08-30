@@ -1,7 +1,7 @@
 (**
    Constraint contains parameters for calculating constraint.
 
-   @version 0.1
+   @version 0.2
    @author derui
 *)
 

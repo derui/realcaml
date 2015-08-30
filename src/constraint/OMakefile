@@ -60,17 +60,12 @@ OCAMLOPTFLAGS +=
 
 FILES[] = $(removesuffix $(ls *ml))
 #
-LIB = realcaml_mesh
+LIB = realcaml_constraint
 #
 MyOCamlPackage($(LIB), $(FILES), $(EMPTY), $(EMPTY), true)
 
 OUTPUTS=$(OCamlPackageGeneratedFiles $(LIB), false)
 
-lib: $(OUTPUTS)
-	mkdir -p ../../lib/mesh
-	cp $(OUTPUTS) ../../lib/mesh/
-
-clean: $(OUTPUTS)
-	rm -f ../../lib/mesh/*
+lib: $(OUTPUTS) lib_util
 
 .DEFAULT: lib

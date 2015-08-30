@@ -1,5 +1,5 @@
 type t = {
-  axis:Candyvec.Std.Vector.t;
+  axis:Types.vec;
   jac_diag_inv:float;
   rhs:float;
   lower_limit:float;
@@ -7,26 +7,17 @@ type t = {
   accum_impulse:float;
 }
 
-module Setup = struct
-  type t = {
-    k : Candyvec.Std.Matrix.t;
-    restriction : float;
-    relative_velocity : Candyvec.Std.Vector.t;
-    contact_bias : float;
-    distance: float;
-    time_step : float;
-  }
-end
-
-module V = Candyvec.Std.Vector
-module M = Candyvec.Std.Matrix
+module A = Typedvec.Std.Algebra
+module V = A.Vec
+module M = A.Mat
+module U = Realcaml_util
 
 let make info axis =
   let open V.Open in
-  let open M.Open in
+  let open A.Open in
   let open Setup in
-  let denom = V.dot (axis *||> info.k) axis in
-  let rhs = -.(1.0 +. info.restriction) *. (info.relative_velocity *@ axis) in
+  let denom = ((U.Vec.to_four axis) *> info.Setup.k |> U.Vec.to_three) *: axis in
+  let rhs = -.(1.0 +. info.Setup.restriction) *. (info.Setup.relative_velocity *: axis) in
   let rhs = rhs -.
     (info.contact_bias *. min 0.0 info.distance) /. info.time_step in
   let jac_diag_inv = 1.0 /. denom in

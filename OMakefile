@@ -27,7 +27,7 @@ BYTE_ENABLED = true
 
 INSTALLED = $(BIG_ROOT)/installed
 
-.PHONY: all install clean 
+.PHONY: all install clean lib_util lib_mesh lib_rigid_body
 
 ########################################################################
 # Subdirectories.
@@ -37,7 +37,7 @@ INSTALLED = $(BIG_ROOT)/installed
 
 LIB = realcaml
 
-.SUBDIRS: src test
+.SUBDIRS: src test lib
 
 GENFILES = $(OCamlPackageGeneratedFiles $(LIB), false)
 

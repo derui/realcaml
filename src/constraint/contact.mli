@@ -21,5 +21,5 @@ type t = {
 val empty: t
 
 (** Get new contact structure updated with two bodies and a new closest point *)
-val update_contact_points : contact:t -> body_a:R.Rigid_body_info.t -> body_b:R.Rigid_body_info.t ->
-  closest:ClosestPoint.t -> t
+val update_contact_points : body_a:R.Rigid_body_info.t -> body_b:R.Rigid_body_info.t ->
+  closest:ClosestPoint.t -> t -> t

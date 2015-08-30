@@ -66,11 +66,6 @@ MyOCamlPackage($(LIB), $(FILES), $(EMPTY), -linkall, true)
 
 OUTPUTS=$(OCamlPackageGeneratedFiles $(LIB), false)
 
-lib: $(OUTPUTS)
-	mkdir -p ../../lib/rigid_body
-	cp $(OUTPUTS) ../../lib/rigid_body
-
-clean:
-	rm -f ../../lib/rigid_body
+lib: lib_util $(OUTPUTS)
 
 .DEFAULT: lib

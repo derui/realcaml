@@ -67,10 +67,7 @@ MyOCamlPackage($(LIB), $(FILES), $(EMPTY), -linkall, true)
 OUTPUTS=$(OCamlPackageGeneratedFiles $(LIB), false)
 
 lib: $(OUTPUTS)
-	mkdir -p ../../lib/voronoi
-	cp $(OUTPUTS) ../../lib/voronoi
 
-clean:
-	rm -f ../../lib/voronoi
+lib_voronoi: lib
 
 .DEFAULT: lib

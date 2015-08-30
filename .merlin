@@ -1,0 +1,5 @@
+S src
+B src
+PKG core
+PKG typedvec
+PKG typedvec_ext

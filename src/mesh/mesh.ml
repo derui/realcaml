@@ -1,4 +1,4 @@
-module V = Typedvec.Algebra.Vec
+module V = Typedvec.Std.Algebra.Vec
 
 open Core.Std
 

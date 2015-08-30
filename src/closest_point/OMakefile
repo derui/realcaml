@@ -65,10 +65,5 @@ LIB = realcaml_closest_point
 OUTPUTS=$(MyOCamlLibrary $(LIB), $(FILES))
 
 lib: $(OUTPUTS)
-	mkdir -p ../../lib/closest_point
-	cp $(OUTPUTS) ../../lib/closest_point/
-
-clean: $(OUTPUTS)
-	rm -f ../../lib/closest_point/*
 
 .DEFAULT: lib

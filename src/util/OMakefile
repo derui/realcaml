@@ -70,7 +70,9 @@ lib: $(OUTPUTS)
 	mkdir -p ../../lib/util
 	cp $(OUTPUTS) ../../lib/util
 
+realcaml_util.%: $(OUTPUTS)
+
 clean:
-	rm -f ../../lib/util
+	rm -rf $(BIG_ROOT)/lib/util
 
 .DEFAULT: lib
