@@ -1,5 +1,12 @@
 open Core.Std
 
+module Voronoi = Realcaml_voronoi
+module A = Typedvec.Std.Algebra
+module S = Typedvec.Std.Size
+module V = A.Vec
+module M = A.Mat
+module Mesh = Realcaml_mesh
+
 (* Result of functions in this module. That types are each positions to first and second mesh,
    and last float is distination between them.
 *)
@@ -7,13 +14,14 @@ type t = {
   normal : Types.vec;
   point_a : Types.vec;
   point_b : Types.vec;
-  depth : float
+  depth : float;
 }
 
-let sort_points list = List.sort ~f:(fun {depth = d1;_} {depth = d2;_} -> compare d1 d2) list
+let sort_points list = List.sort ~cmp:(fun {depth = d1;_} {depth = d2;_} -> compare d1 d2) list
 
-let is_observe_face plane normal = V.dot plane.Mesh.Facet.normal normal >= 0.0
 (* Check the plane to be equal direction for normal. *)
+let is_observe_face plane normal =
+  let open V.Open in plane.Mesh.Facet.normal *: normal >= 0.0
 
   (* TODO: 最近接点を探す際、どちらか一方のどれかの形状を座標系として
      利用できるようにする。bodyが入れ替わっても、座標系は変わってはならない。
@@ -23,16 +31,21 @@ let is_observe_face plane normal = V.dot plane.Mesh.Facet.normal normal >= 0.0
      作っておく。
   *)
 let get_plane_closest_points (axis, _) body_a body_b trans_mat =
-  let shapes = body_a.RI.collidable.Collidable.shapes in
-  let open Candyvec.Std.Matrix.Open in
+  let open Realcaml_rigid_body in
+  let shapes = body_a.Rigid_body_info.collidable.Collidable.shapes in
   let world_b =
-    let world_a = RI.get_world_transform body_a in
-    RI.get_world_transform body_b *|> MU.force_inverse world_a *|> trans_mat in
+    let open M.Open in
+    let world_a = Rigid_body_info.get_world_transform body_a in
+    let inverted = match M.inverse world_a with
+      | Some m -> m
+      | None -> M.identity S.four
+    in
+    Rigid_body_info.get_world_transform body_b *: inverted *: trans_mat in
 
     (* TRANSLATE: それぞれのメッシュについて、offsetを反映させた上で実行させる。 *)
-  let contacts = Array.to_list |< Array.map (fun shape ->
+  let contacts = Array.map shapes ~f:(fun shape ->
     let mesh = shape.Shape.mesh in
-    Array.to_list |< Array.mapi (fun index plane ->
+    Array.mapi mesh.Mesh.facets ~f:(fun index plane ->
       if is_observe_face plane axis then
         let voronoi_region = Voronoi.voronoi_region mesh index in
 
@@ -53,9 +66,8 @@ let get_plane_closest_points (axis, _) body_a body_b trans_mat =
         | [] -> None
         | _ -> Some (List.concat points |> sort_points |> List.hd)
       else None
-    ) mesh.Mesh.facets
-  ) shapes in
-  let module O = Sugarpot.Std.Option in
+    ) |> Array.to_list
+  ) |> Array.to_list in
   match contacts with
   | [] -> []
   | _ -> List.concat contacts |> O.option_map id

@@ -31,12 +31,13 @@ let get_transformed_vertices shape =
   let module M = Realcaml_mesh.Mesh in
   let module V = Util.Vec in
   let trans = Shape.offset_transform shape in
-  Array.map shape.Shape.mesh.M.vertices ~f:(fun v -> A.mul_v2m (V.to_four v) trans) |> Array.to_list
+  Array.map shape.Shape.mesh.M.vertices ~f:(fun v -> A.mul_v2m (V.to_four v) trans) |>
+      Array.map ~f:V.to_three |> Array.to_list
 
 let build shapes =
   let vertices = Array.map ~f:get_transformed_vertices shapes |> Array.to_list |> List.concat in
-  let max_point = V.make S.four Float.min_value
-  and min_point = V.make S.four Float.max_value in
+  let max_point = V.make S.three Float.min_value
+  and min_point = V.make S.three Float.max_value in
   let max_point,min_point = List.fold_left vertices ~f:(fun (max_point, min_point) v ->
     let max_point = compare_vec max v max_point
     and min_point = compare_vec min v min_point in

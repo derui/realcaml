@@ -19,6 +19,15 @@
 # You will usually need to modify this file for your project.
 open MyOCaml
 
+# Get the library path converted from library name.
+# Ex. NameToLibPath(util voronoi) --> src/util/realcaml_util src/voronoi/realcaml_voronoi
+public.NameToLibPath(names) =
+    LIBS =
+    foreach(name => ..., $(array $(names)))
+        LIBS += $(BIG_ROOT)/src/$(name)/realcaml_$(name)
+        export
+    return $(LIBS)
+
 ########################################################################
 # Phony targets are scoped, so you probably want to declare them first.
 #
@@ -27,7 +36,7 @@ BYTE_ENABLED = true
 
 INSTALLED = $(BIG_ROOT)/installed
 
-.PHONY: all install clean lib_util lib_mesh lib_rigid_body
+.PHONY: all install clean
 
 ########################################################################
 # Subdirectories.
@@ -37,11 +46,11 @@ INSTALLED = $(BIG_ROOT)/installed
 
 LIB = realcaml
 
-.SUBDIRS: src test lib
+.SUBDIRS: src test
 
 GENFILES = $(OCamlPackageGeneratedFiles $(LIB), false)
 
 INSTALL_FILES = $(addprefix src/, $(GENFILES))
-INSTALL_FILES += $(ls src/*mli)
+INSTALL_FILES += $(ls R, src/*mli)
 
 .DEFAULT: all

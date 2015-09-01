@@ -3,8 +3,9 @@ open Core.Std
 module A = Typedvec.Std.Algebra
 module V = A.Vec
 module S = Typedvec.Std.Size
+module U = Realcaml_util
 
-type v = Types.three_vec
+type v = U.vec
 
 module Edge_region = struct
   (* TRANSLATE: エッジの始点と終点、エッジの法線ベクトル、面の法線ベクトル *)
@@ -36,6 +37,9 @@ end
 type region_type = [`Edge of Edge_region.t | `Point of Point_region.t]
 
 type t = region_type
+
+type triangle = v * v * v
+(* The type of triangle. *)
 
 (* TRANSLATE : エッジと面の法線から、エッジのボロノイ領域を取得する *)
 let make_edge_region (v1, v2) normal =

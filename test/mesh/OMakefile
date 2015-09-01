@@ -59,7 +59,7 @@ OCAMLPACKS[] =
 #
 # Include path
 #
-OCAMLINCLUDES += ../../src/mesh
+OCAMLINCLUDES += ../../src
 
 #
 # Compile native or byte code?
@@ -69,7 +69,6 @@ OCAMLINCLUDES += ../../src/mesh
 NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
 BYTE_ENABLED = true
 
-OCAML_LIBS += ../../src/mesh/realcaml_mesh
 #
 # Various options
 #

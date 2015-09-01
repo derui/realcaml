@@ -59,7 +59,7 @@ OCAMLPACKS[] =
 #
 # Include path
 #
-OCAMLINCLUDES += ../../lib/mesh ../../lib/rigid_body
+OCAMLINCLUDES += ../../src/
 
 #
 # Compile native or byte code?
@@ -69,7 +69,6 @@ OCAMLINCLUDES += ../../lib/mesh ../../lib/rigid_body
 NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
 BYTE_ENABLED = true
 
-OCAML_LIBS += ../../lib/mesh/realcaml_mesh ../../lib/rigid_body/realcaml_rigid_body
 #
 # Various options
 #

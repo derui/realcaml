@@ -69,7 +69,7 @@ OCAMLINCLUDES += ../src
 NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
 BYTE_ENABLED = true
 
-OCAML_LIBS += ../src/realcamel
+OCAML_LIBS += ../src/realcaml
 #
 # Various options
 #
