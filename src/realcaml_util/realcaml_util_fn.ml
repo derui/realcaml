@@ -1,8 +1,8 @@
 open Core.Std
-module A = Typedvec.Std.Algebra
-module S = Typedvec.Std.Size
 
 let to_world_transform pos orientation =
+  let module A = Typedvec.Std.Algebra in
+  let module S = Typedvec.Std.Size in
   let open A.Mat.Open in
   let module Q = Typedvec.Std.Ext.Qua in
   let module M = A.Mat in

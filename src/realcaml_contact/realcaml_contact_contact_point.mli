@@ -5,11 +5,13 @@
    @author derui
 *)
 
+module U = Realcaml_util
+
 type t = {
   distance:float;
-  pointA: Types.vec;
-  pointB:Types.vec;
-  normal:Types.vec;
+  pointA: U.vec;
+  pointB:U.vec;
+  normal:U.vec;
   constraints: Constraint.t list;
 }
 

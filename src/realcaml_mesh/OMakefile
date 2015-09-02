@@ -1,4 +1,4 @@
-.PHONY: lib install clean
+.PHONY: local_lib install clean
 
 #
 # This project requires ocamlfind (default - false).
@@ -17,7 +17,7 @@ if $(not $(OCAMLFIND_EXISTS))
 #
 # Include path
 #
-OCAMLINCLUDES +=
+OCAMLINCLUDES += ../
 
 #
 # Compile native or byte code?
@@ -41,11 +41,11 @@ OCAMLOPTFLAGS += -g
 # Build an OCaml library
 #
 
-LIB=realcaml_mesh
+LIB=realcaml_mesh_lib
 FILES[] = $(removesuffix $(ls *ml))
 #
 MyOCamlLibrary($(LIB), $(FILES))
 
-lib: $(OCamlLibrary $(LIB), $(FILES))
+local_lib: $(OCamlLibrary $(LIB), $(FILES))
 
-.DEFAULT: lib
+.DEFAULT: local_lib

@@ -6,20 +6,23 @@
    @author derui
 *)
 
+module M = Realcaml_mesh
+module U = Realcaml_util
+
 (** Type of collidable. *)
 type t = {
   (** The shapes in given collidable container.  *)
-  shapes:Shape.t array;
+  shapes: M.Shape.t array;
   (** Center of the AABB *)
-  center: Types.vec;
+  center: U.vec;
   (** The half size of the AABB from center of it.  *)
-  half_size: Types.vec;
+  half_size: U.vec;
 }
 
 (** Get empty collidable. *)
 val empty : t
 
-val build : Shape.t array -> t
+val build : M.Shape.t array -> t
 (** Build AABB fitting own shapes and return including it. *)
 
 val rebuild : t -> t

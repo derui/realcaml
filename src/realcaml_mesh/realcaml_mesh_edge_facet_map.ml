@@ -1,5 +1,9 @@
 open Core.Std
 
+module Edge = Realcaml_mesh_edge
+module Facet = Realcaml_mesh_facet
+module Types = Realcaml_mesh_types
+
 module M = Map.Make(struct
   type t = Types.edge_id
   let t_of_sexp = Int.t_of_sexp

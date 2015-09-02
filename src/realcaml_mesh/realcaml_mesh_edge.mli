@@ -5,6 +5,7 @@
    @author derui
 *)
 
+module Types = Realcaml_mesh_types
 
 (* Variation of edge. *)
 type edge_type = Convex | Concave | Flat

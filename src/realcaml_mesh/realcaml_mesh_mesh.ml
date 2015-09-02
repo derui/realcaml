@@ -1,6 +1,10 @@
 module V = Typedvec.Std.Algebra.Vec
 
 open Core.Std
+module Edge = Realcaml_mesh_edge
+module Facet = Realcaml_mesh_facet
+module Types = Realcaml_mesh_types
+module Edge_facet_map = Realcaml_mesh_edge_facet_map
 
 module Tuple_key = struct
   type t = int * int

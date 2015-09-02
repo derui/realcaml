@@ -1,8 +1,11 @@
 module A = Typedvec.Std.Algebra
 module S = Typedvec.Std.Size
 
+module M = Realcaml_mesh
+module U = Realcaml_util
+
 type t = {
-  inertia:Types.mat;
+  inertia:U.mat;
   mass:float;
   restitution:float;
   friction:float;

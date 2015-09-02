@@ -6,6 +6,10 @@
    @author derui
 *)
 
+module Edge = Realcaml_mesh_edge
+module Facet = Realcaml_mesh_facet
+module Types = Realcaml_mesh_types
+
 type t
 (* The type of Edge_facet_map. *)
 

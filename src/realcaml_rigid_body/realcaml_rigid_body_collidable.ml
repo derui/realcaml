@@ -1,19 +1,20 @@
 open Core.Std
-module Util = Realcaml_util
+module U = Realcaml_util
 module A = Typedvec.Std.Algebra
 module S = Typedvec.Std.Size
-module V = Typedvec.Std.Algebra.Vec
+module V = A.Vec
+module M = Realcaml_mesh
 
 type t = {
-  shapes:Shape.t array;
-  center:Types.vec;
-  half_size:Types.vec;
+  shapes:M.Shape.t array;
+  center:U.vec;
+  half_size:U.vec;
 }
 
 let empty = {
   shapes = [||];
-  center = Util.Vec.empty;
-  half_size = Util.Vec.empty;
+  center = U.Vec.empty;
+  half_size = U.Vec.empty;
 }
 
 let compare_vec comparator v1 v2 =
@@ -29,7 +30,8 @@ let lesser_float f1 f2 = if f1 < f2 then f1 else f2
 
 let get_transformed_vertices shape =
   let module M = Realcaml_mesh.Mesh in
-  let module V = Util.Vec in
+  let module Shape = M.Shape in
+  let module V = U.Vec in
   let trans = Shape.offset_transform shape in
   Array.map shape.Shape.mesh.M.vertices ~f:(fun v -> A.mul_v2m (V.to_four v) trans) |>
       Array.map ~f:V.to_three |> Array.to_list
@@ -52,7 +54,7 @@ let build shapes =
   and y = (V.get ~index:1 diagonal |> Option.value ~default:0.0) *. 0.5
   and z = (V.get ~index:2 diagonal |> Option.value ~default:0.0) *. 0.5 in
 
-  let half_size = Util.Vec.empty in
+  let half_size = U.Vec.empty in
   V.set ~index:0 ~v:x half_size;
   V.set ~index:1 ~v:y half_size;
   V.set ~index:2 ~v:z half_size;

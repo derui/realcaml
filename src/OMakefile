@@ -1,4 +1,6 @@
-.PHONY: lib install clean
+.PHONY: lib install clean local_lib
+
+.SUBDIRS: realcaml_contact realcaml_mesh realcaml_rigid_body realcaml_util realcaml_voronoi
 
 ################################################
 # Configuration.  You may want to modify any of these configuration
@@ -22,7 +24,7 @@ if $(not $(OCAMLFIND_EXISTS))
 #
 # Include path
 #
-OCAMLINCLUDES += $(subdirs .)
+OCAMLINCLUDES += $(subdirs P, .)
 
 #
 # Compile native or byte code?
@@ -50,6 +52,10 @@ FILES[] = $(removesuffix $(ls *ml))
 #
 MyOCamlPackage($(LIB), $(FILES), $(EMPTY), -linkall, true)
 
-lib: $(OCamlPackageGeneratedFiles $(LIB), false)
+OUTPUT=$(OCamlPackageGeneratedFiles $(LIB), false)
+
+$(OUTPUT): local_lib
+
+lib: $(OUTPUT)
 
 .DEFAULT: lib

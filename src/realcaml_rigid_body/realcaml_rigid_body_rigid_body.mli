@@ -6,9 +6,11 @@
    @author derui
 *)
 
+module U = Realcaml_util
+
 (** type of rigid body  *)
 type t = {
-  inertia:Types.mat;
+  inertia:U.mat;
   mass:float;
   restitution:float;
   friction:float;

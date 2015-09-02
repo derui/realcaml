@@ -1,4 +1,8 @@
 
+module Rigid_body = Realcaml_rigid_body_rigid_body
+module Collidable = Realcaml_rigid_body_collidable
+module State = Realcaml_rigid_body_state
+
 type t = {
   body:Rigid_body.t;
   collidable:Collidable.t;

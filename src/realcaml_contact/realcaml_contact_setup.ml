@@ -5,12 +5,14 @@
    @author derui
 *)
 
+module U = Realcaml_util
+
 type t = {
-  k : Types.mat;
+  k : U.mat;
     (** The k matrix that is calculated to physical quantity of constraint *)
   restriction : float;
     (** The restriction between two bodies to calculate constraint *)
-  relative_velocity : Types.vec;
+  relative_velocity : U.vec;
     (** relative velocity between two bodies. *)
   contact_bias : float;
     (** The bias for distance to detect bodies are not contact *)

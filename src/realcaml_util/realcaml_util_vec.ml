@@ -1,6 +1,7 @@
 open Core.Std
 module A = Typedvec.Std.Algebra
 module S = Typedvec.Std.Size
+module Types = Realcaml_util_types
 
 let empty = A.Vec.zero S.three
 
