@@ -3,13 +3,17 @@ open Core.Std
 module U = Realcaml_util
 module Types = Realcaml_mesh_types
 module Edge = Realcaml_mesh_edge
-
-type vertex_ids = int * int * int
-type edge_ids = Types.edge_id * Types.edge_id * Types.edge_id
-
 module A = Typedvec.Std.Algebra
 module S = Typedvec.Std.Size
+
+type vertex_ids = int * int * int
+type edge_id = Types.edge_id
+type edge_ids = edge_id * edge_id * edge_id
+
 type normal = U.vec
+
+type edge = Types.vertex * Types.vertex
+type facet = (Edge.vertex_ids * Edge.vertex_ids * Edge.vertex_ids)
 
 type t = {
   facet_id: Types.facet_id;
@@ -24,8 +28,6 @@ let empty = {
   edge_ids = (0,0,0);
   normal = A.Vec.make S.three 0.0;
 }
-
-type edge = Types.vertex * Types.vertex
 
 let edges_of_face (a, b, c) = ((a, b), (b, c), (c, a))
 

@@ -1,2 +1,2 @@
 
-open Realcaml_voronoi_voronoi
+module Voronoi = Realcaml_voronoi_voronoi

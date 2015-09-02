@@ -7,25 +7,20 @@
    @derui
 *)
 
-module U = Realcaml_util
-module Rigid_body = Realcaml_rigid_body_rigid_body
-module Collidable = Realcaml_rigid_body_collidable
-module State = Realcaml_rigid_body_state
-
 type t = {
   (** The rigid body *)
-  body:Rigid_body.t;
+  body:Realcaml_rigid_body_rigid_body.t;
   (** the collidable information of rigid body *)
-  collidable:Collidable.t;
+  collidable:Realcaml_rigid_body_collidable.t;
   (** the state of the rigid body *)
-  state:State.t;
+  state:Realcaml_rigid_body_state.t;
 }
 
 (** Get transformation matrix to world coodinates *)
-val get_world_transform: t -> U.mat
+val get_world_transform: t -> Realcaml_util.mat
 
 (** Get position of the RigidBodyInfo *)
-val pos : t -> U.vec
+val pos : t -> Realcaml_util.vec
 
 (** Set position of the RigidBodyInfo *)
-val set_pos : t -> pos:U.vec -> t
+val set_pos : t -> pos:Realcaml_util.vec -> t

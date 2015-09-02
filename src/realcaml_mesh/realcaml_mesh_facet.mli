@@ -5,19 +5,18 @@
    @author derui
 *)
 
-module U = Realcaml_util
-module Types = Realcaml_mesh_types
-module Edge = Realcaml_mesh_edge
-
 type vertex_ids = int * int * int
 (* The type of vertex ids contains the Facet. *)
-type edge_ids = Types.edge_id * Types.edge_id * Types.edge_id
+type edge_id = Realcaml_mesh_types.edge_id
+type edge_ids = edge_id * edge_id * edge_id
 (* The type of edge ids contains the Facet. *)
 
-type normal = U.vec
+type normal = Realcaml_util.vec
+type edge = Realcaml_mesh_types.vertex * Realcaml_mesh_types.vertex
+type facet = (Realcaml_mesh_edge.vertex_ids * Realcaml_mesh_edge.vertex_ids * Realcaml_mesh_edge.vertex_ids)
 
 type t = {
-  facet_id: Types.facet_id;
+  facet_id: Realcaml_mesh_types.facet_id;
   (* The identity of this *)
   vertex_ids: vertex_ids;
   (* vertex ids including this facet. *)
@@ -27,15 +26,14 @@ type t = {
   (* The normal vector of this facet. *)
 }
 
-type edge = Types.vertex * Types.vertex
 
 (* TRANSLATE: a,b,cがなす三角形のedgeを生成する
 
    生成されるエッジは、それぞれ ∠C、∠A、∠B の対面となるエッジとなる
 *)
-val edges_of_face: vertex_ids -> (Edge.vertex_ids * Edge.vertex_ids * Edge.vertex_ids)
+val edges_of_face: vertex_ids -> facet
 
-val alloc_facet_id: vertex_ids array -> (Types.facet_id * vertex_ids) array
+val alloc_facet_id: vertex_ids array -> (Realcaml_mesh_types.facet_id * vertex_ids) array
 
 (* TRANSLATE: 渡されたエッジが成す平面が、縮退面であるかどうかを判別する *)
 val is_degenerate: a:edge -> b:edge -> c:edge -> unit -> bool

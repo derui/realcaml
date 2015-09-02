@@ -5,11 +5,9 @@
    @author derui
 *)
 
-module U = Realcaml_util
-
 type t = {
   (** constraint axis  *)
-  axis:U.vec;
+  axis:Realcaml_util.vec;
   (** the denominator of constraint expression  *)
   jac_diag_inv:float;
   (** the initial power of constraint *)
@@ -22,5 +20,5 @@ type t = {
   accum_impulse:float;
 }
 
-val make : Setup.t -> U.vec -> t
+val make : Realcaml_contact_setup.t -> Realcaml_util.vec -> t
 (** [!setup setup_info axis] to setup the Constraint for axis. *)

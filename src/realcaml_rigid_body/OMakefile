@@ -17,7 +17,7 @@ if $(not $(OCAMLFIND_EXISTS))
 #
 # Include path
 #
-OCAMLINCLUDES += ../
+OCAMLINCLUDES += ..
 
 #
 # Compile native or byte code?
@@ -41,7 +41,7 @@ OCAMLOPTFLAGS += -g
 # Build an OCaml library
 #
 
-LIB=realcaml_rigid_body
+LIB=realcaml_rigid_body_lib
 FILES[] = $(removesuffix $(ls *ml))
 #
 MyOCamlLibrary($(LIB), $(FILES))

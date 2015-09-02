@@ -5,8 +5,6 @@
    @author derui
 *)
 
-module Types = Realcaml_mesh_types
-
 (* Variation of edge. *)
 type edge_type = Convex | Concave | Flat
 
@@ -15,7 +13,7 @@ type vertex_ids = int * int
 
 (** A type of Edge  *)
 type t = {
-  edge_id: Types.edge_id;
+  edge_id: Realcaml_mesh_types.edge_id;
   (* The identity of edge *)
   edge_type: edge_type;
   (* The type of this edge. *)

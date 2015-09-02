@@ -7,14 +7,12 @@
 
 type motion = Active | Static
 
-module U = Realcaml_util
-
 (** Types including some statements of rigid body. *)
 type t = {
-  pos:U.vec;
+  pos:Realcaml_util.vec;
   orientation:Typedvec.Std.Ext.Qua.t;
-  linear_velocity:U.vec;
-  angular_velocity:U.vec;
+  linear_velocity:Realcaml_util.vec;
+  angular_velocity:Realcaml_util.vec;
   motion_type:motion;
 }
 
@@ -22,7 +20,7 @@ type t = {
 val empty: t
 
 (** Get a transform matrix to convert world coodinate. *)
-val to_world_transform : t -> U.mat
+val to_world_transform : t -> Realcaml_util.mat
 
 (** A shortcut to check motion type of a State. *)
 val is_static : t -> bool

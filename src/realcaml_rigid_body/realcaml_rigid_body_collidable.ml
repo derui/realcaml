@@ -2,11 +2,11 @@ open Core.Std
 module U = Realcaml_util
 module A = Typedvec.Std.Algebra
 module S = Typedvec.Std.Size
-module V = A.Vec
-module M = Realcaml_mesh
+module V = Typedvec.Std.Algebra.Vec
+module Shape = Realcaml_rigid_body_shape
 
 type t = {
-  shapes:M.Shape.t array;
+  shapes:Shape.t array;
   center:U.vec;
   half_size:U.vec;
 }
@@ -30,7 +30,6 @@ let lesser_float f1 f2 = if f1 < f2 then f1 else f2
 
 let get_transformed_vertices shape =
   let module M = Realcaml_mesh.Mesh in
-  let module Shape = M.Shape in
   let module V = U.Vec in
   let trans = Shape.offset_transform shape in
   Array.map shape.Shape.mesh.M.vertices ~f:(fun v -> A.mul_v2m (V.to_four v) trans) |>

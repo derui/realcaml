@@ -5,23 +5,23 @@ module V = Typedvec.Std.Algebra.Vec
 module M = Typedvec.Std.Algebra.Mat
 module S = Typedvec.Std.Size
 module Q = Typedvec.Std.Ext.Qua
+module U = Realcaml_util
 
 type t = {
-  pos:Types.vec;
+  pos:U.vec;
   orientation:Q.t;
-  linear_velocity:Types.vec;
-  angular_velocity:Types.vec;
+  linear_velocity:U.vec;
+  angular_velocity:U.vec;
   motion_type:motion;
 }
 
 let empty =
-  let module Util = Realcaml_util in
-  {pos = Util.Vec.empty; orientation = Q.identity;
-   linear_velocity = Util.Vec.empty;
-   angular_velocity = Util.Vec.empty;
+  {pos = U.Vec.empty; orientation = Q.identity;
+   linear_velocity = U.Vec.empty;
+   angular_velocity = U.Vec.empty;
    motion_type = Static}
 
-let to_world_transform {pos;orientation;_} = Realcaml_util.Util.to_world_transform pos orientation
+let to_world_transform {pos;orientation;_} = U.to_world_transform pos orientation
 
 let is_static {motion_type;_} =
   match motion_type with

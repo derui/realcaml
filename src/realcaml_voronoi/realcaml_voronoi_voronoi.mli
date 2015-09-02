@@ -6,13 +6,10 @@
    @version 0.1
 *)
 
-module M = Realcaml_mesh
-module U = Realcaml_util
-
 (** type of a voronoi region *)
 type t
 
-val voronoi_region :M.Mesh.t -> int -> t
+val voronoi_region :Realcaml_mesh.Mesh.t -> int -> t
 (** Calculate voronoi regions with vertices of a some shape.
     Aligns of vertices needs to be counter clockwise.
 
@@ -21,7 +18,7 @@ val voronoi_region :M.Mesh.t -> int -> t
     @return vonoroi regions are calculated with given vertices
 *)
 
-val recent_of_region : point:U.vec -> t -> U.vec
+val recent_of_region : point:Realcaml_util.vec -> t -> Realcaml_util.vec
 (** Get a type of recent point in the voronoi regions with a given point.
 
     @param point a point to get type of recent point in the voronoi regions

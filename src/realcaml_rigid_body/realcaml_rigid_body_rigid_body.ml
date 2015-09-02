@@ -1,7 +1,6 @@
 module A = Typedvec.Std.Algebra
 module S = Typedvec.Std.Size
 
-module M = Realcaml_mesh
 module U = Realcaml_util
 
 type t = {
