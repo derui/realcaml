@@ -1,4 +1,4 @@
-.PHONY: lib install clean local_lib
+.PHONY: lib install clean
 
 .SUBDIRS: realcaml_contact realcaml_mesh realcaml_rigid_body realcaml_util realcaml_voronoi
 

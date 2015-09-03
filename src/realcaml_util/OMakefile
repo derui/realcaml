@@ -1,5 +1,4 @@
-.PHONY: local_lib install clean
-
+.PHONY: lib install clean
 #
 # This project requires ocamlfind (default - false).
 #
@@ -41,11 +40,11 @@ OCAMLOPTFLAGS += -g
 # Build an OCaml library
 #
 
-LIB=realcaml_util_lib
+LIB=realcaml_util
 FILES[] = $(removesuffix $(ls *ml))
 #
-MyOCamlLibrary($(LIB), $(FILES))
+MyOCamlPackage($(LIB), $(FILES), $(EMPTY), -linkall, true)
 
-local_lib: $(OCamlLibrary $(LIB), $(FILES))
+lib: $(OCamlPackageGeneratedFiles $(LIB), false)
 
 .DEFAULT: local_lib

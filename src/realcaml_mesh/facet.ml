@@ -1,8 +1,6 @@
 open Core.Std
 
 module U = Realcaml_util
-module Types = Realcaml_mesh_types
-module Edge = Realcaml_mesh_edge
 module A = Typedvec.Std.Algebra
 module S = Typedvec.Std.Size
 
@@ -10,7 +8,7 @@ type vertex_ids = int * int * int
 type edge_id = Types.edge_id
 type edge_ids = edge_id * edge_id * edge_id
 
-type normal = U.vec
+type normal = U.Types.vec
 
 type edge = Types.vertex * Types.vertex
 type facet = (Edge.vertex_ids * Edge.vertex_ids * Edge.vertex_ids)

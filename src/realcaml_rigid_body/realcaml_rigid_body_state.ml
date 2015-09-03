@@ -16,7 +16,8 @@ type t = {
 }
 
 let empty =
-  {pos = U.Vec.empty; orientation = Q.identity;
+  {pos = U.Vec.empty;
+   orientation = Q.identity;
    linear_velocity = U.Vec.empty;
    angular_velocity = U.Vec.empty;
    motion_type = Static}

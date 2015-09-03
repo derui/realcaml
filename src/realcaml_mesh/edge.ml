@@ -7,8 +7,6 @@
 
 open Core.Std
 
-module Types = Realcaml_mesh_types
-
 type edge_type = Convex | Concave | Flat
 
 type vertex_ids = int * int

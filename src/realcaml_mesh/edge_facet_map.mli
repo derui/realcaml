@@ -9,8 +9,8 @@
 type t
 (* The type of Edge_facet_map. *)
 
-val make: edges:Realcaml_mesh_edge.t array -> facets:Realcaml_mesh_facet.t array -> unit -> t
+val make: edges:Edge.t array -> facets:Facet.t array -> unit -> t
 (* [make ~edges ~facets ()] get the new Edge_facet_map instance. *)
 
-val find: edge:Realcaml_mesh_types.edge_id -> t -> Realcaml_mesh_facet.t list
+val find: edge:Types.edge_id -> t -> Facet.t list
 (* [find ~edge t] find facets contains specified edge. *)
