@@ -17,7 +17,7 @@ if $(not $(OCAMLFIND_EXISTS))
 #
 # Include path
 #
-OCAMLINCLUDES += ..
+OCAMLINCLUDES += .. ../realcaml_util
 
 #
 # Compile native or byte code?

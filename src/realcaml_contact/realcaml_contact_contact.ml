@@ -1,8 +1,11 @@
-open Sugarpot.Std.Prelude
-module V = Candyvec.Std.Vector
-module RI = RigidBodyInfo
-module M = Candyvec.Std.Matrix
-module MU = Candyvec.Std.Matrix_util
+open Core.Std
+module A = Typedvec.Std.Algebra
+module V = Typedvec.Std.Algebra.Vec
+module RI = Realcaml_rigid_body
+module M = Typedvec.Std.Algebra.Mat
+module U = Realcaml_util
+module ContactPoint = Realcaml_contact_contact_point
+module ClosestPoint = Realcaml_contact_closest_point
 
 type t = {
   contact_num:int;
@@ -17,10 +20,10 @@ let calc_next_contact contact next_list =
     {contact with contact_points = next_list; contact_num = List.length next_list }
   else
       (* TRANSLATE:限度の個数以上になる場合、面積が最大になるような衝突点のみ選択する  *)
-    let sorted_list = List.sort (fun cp1 cp2 ->
-        compare cp1.ContactPoint.distance cp2.ContactPoint.distance) next_list |> List.rev in
-    let max_dist = List.hd sorted_list in
-    let points_without_max = Array.of_list |< List.tl sorted_list in
+    let sorted_list = List.sort next_list ~cmp:(fun cp1 cp2 ->
+        compare cp1.ContactPoint.distance cp2.ContactPoint.distance) |> List.rev in
+    let max_dist = List.hd_exn sorted_list in
+    let points_without_max = List.tl sorted_list |> Option.value ~default:[] |> Array.of_list in
     let get_combi (a,b,c) = (points_without_max.(a),
                              points_without_max.(b),
                              points_without_max.(c)) in
@@ -34,25 +37,35 @@ let calc_next_contact contact next_list =
       and b = b.ContactPoint.pointA
       and c = c.ContactPoint.pointA
       and d = d.ContactPoint.pointA in
-      List.sort compare [V.cross (V.sub a c) (V.sub b d) |> V.norm |> abs_float;
-                         V.cross (V.sub a b) (V.sub d c) |> V.norm |> abs_float;
-                         V.cross (V.sub a d) (V.sub b c) |> V.norm |> abs_float;] |> List.hd in
+      let open V.Open in
+      List.sort ~cmp:compare [V.cross (a -: c) (b -: d) |> V.norm |> Float.abs;
+                              V.cross (a -: b) (d -: c) |> V.norm |> Float.abs;
+                              V.cross (a -: d) (b -: c) |> V.norm |> Float.abs;] |> List.hd in
       (* TRANSLATE: 最大のdistを中心として、残りを組み合わせてチェックする *)
     let ((a, b, c, d), _) =
-      (List.map (fun (b, c, d) -> ((max_dist,b,c,d), calc_space max_dist b c d)) combi_points) |>
-          List.sort (fun (_, square1) (_, square2) -> compare square1 square2) |> List.hd in
+      List.map combi_points ~f:(fun (b, c, d) -> ((max_dist,b,c,d), calc_space max_dist b c d)) |>
+          List.sort ~cmp:(fun (_, square1) (_, square2) -> compare square1 square2) |> List.hd_exn in
     {contact with contact_num = 4; contact_points = [a;b;c;d]}
 
-let update_contact_points ~contact ~body_a ~body_b ~closest =
+let update_contact_points ~body_a ~body_b ~closest contact =
   (* TRANSLATE: 最近接点をpairに追加する。 *)
+  let module RBI = RI.Rigid_body_info in
+  let open M.Open in
   let point = closest in
-  let open Candyvec.Std.Matrix.Open in
-  let world_a = RI.get_world_transform body_a in
-  let world_b = world_a *|> (RI.get_world_transform body_b |> MU.force_inverse) in
+  let world_a = RBI.get_world_transform body_a in
+  let world_b_inv = match RBI.get_world_transform body_b |> M.inverse with
+    | Some m -> m
+    | None -> failwith "No have inverse matrix of world matrix"
+  in
+  let world_b = world_a *: world_b_inv in
 
-  let new_point = {ContactPoint.empty with ContactPoint.distance = closest.ClosestPoint.depth;
-                   pointA = point.ClosestPoint.point_a; pointB = point.ClosestPoint.point_b *||> world_b;
-                   normal = closest.ClosestPoint.normal ;
+  let open A.Open in
+  let new_point = ContactPoint.empty () in
+  let new_point = {new_point with ContactPoint.distance = closest.ClosestPoint.depth;
+    pointA = point.ClosestPoint.point_a;
+    pointB = (let v = U.Vec.to_four point.ClosestPoint.point_b in
+             v *> world_b |> U.Vec.to_three);
+    normal = closest.ClosestPoint.normal ;
                   } in
   let points_list = new_point :: contact.contact_points in
   calc_next_contact contact points_list

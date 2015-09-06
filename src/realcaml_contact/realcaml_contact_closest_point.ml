@@ -1,19 +1,20 @@
 open Core.Std
 
-module Voronoi = Realcaml_voronoi
+module Voronoi = Realcaml_voronoi.Voronoi
 module A = Typedvec.Std.Algebra
 module S = Typedvec.Std.Size
 module V = A.Vec
 module M = A.Mat
 module Mesh = Realcaml_mesh
+module U = Realcaml_util
 
 (* Result of functions in this module. That types are each positions to first and second mesh,
    and last float is distination between them.
 *)
 type t = {
-  normal : Types.vec;
-  point_a : Types.vec;
-  point_b : Types.vec;
+  normal : U.vec;
+  point_a : U.vec;
+  point_b : U.vec;
   depth : float;
 }
 
@@ -22,6 +23,12 @@ let sort_points list = List.sort ~cmp:(fun {depth = d1;_} {depth = d2;_} -> comp
 (* Check the plane to be equal direction for normal. *)
 let is_observe_face plane normal =
   let open V.Open in plane.Mesh.Facet.normal *: normal >= 0.0
+
+let convert_vertices mat mesh = 
+  let module MS = Mesh.Mesh in
+  let vertices = mesh.MS.vertices in
+  let open A.Open in
+  Array.map vertices ~f:(fun v -> (U.Vec.to_four v) *> mat |> U.Vec.to_three)
 
   (* TODO: 最近接点を探す際、どちらか一方のどれかの形状を座標系として
      利用できるようにする。bodyが入れ替わっても、座標系は変わってはならない。
@@ -40,104 +47,119 @@ let get_plane_closest_points (axis, _) body_a body_b trans_mat =
       | Some m -> m
       | None -> M.identity S.four
     in
-    Rigid_body_info.get_world_transform body_b *: inverted *: trans_mat in
+    (Rigid_body_info.get_world_transform body_b) *: inverted *: trans_mat in
 
     (* TRANSLATE: それぞれのメッシュについて、offsetを反映させた上で実行させる。 *)
   let contacts = Array.map shapes ~f:(fun shape ->
     let mesh = shape.Shape.mesh in
-    Array.mapi mesh.Mesh.facets ~f:(fun index plane ->
+    Array.mapi mesh.Mesh.Mesh.facets ~f:(fun index plane ->
       if is_observe_face plane axis then
         let voronoi_region = Voronoi.voronoi_region mesh index in
 
           (* TRANSLATE: Body Bの各shapeにおけるそれぞれの頂点について処理をする *)
-        let points = Array.to_list |< Array.map (fun shape ->
-          let mesh_b = shape.Shape.mesh |> flip Mesh.transform_vertices world_b in
-          Array.to_list |< Array.map (fun vert ->
-            let point = Voronoi.recent_of_region vert voronoi_region |>
-                Voronoi.expand_recent_point in
+        let module RI = Realcaml_rigid_body in
+        let collidable = body_b.RI.Rigid_body_info.collidable in
+        let shapes = collidable.RI.Collidable.shapes in
+        let points = Array.map shapes ~f:(fun shape ->
+          let mesh_b = convert_vertices world_b shape.Shape.mesh in
+          Array.map mesh_b ~f:(fun vert ->
+            let point = Voronoi.recent_of_region vert voronoi_region in
 
             { normal = axis;
               point_a = point;
               point_b = vert;
               depth = V.sub point vert |> V.norm}
-          ) mesh_b.Mesh.vertices
-        ) body_b.RI.collidable.Collidable.shapes in
-        match points with
-        | [] -> None
-        | _ -> Some (List.concat points |> sort_points |> List.hd)
-      else None
-    ) |> Array.to_list
+          ) |> Array.to_list
+        ) |> Array.to_list in
+        match List.concat points |> sort_points with
+        | [] -> []
+        | hd :: _  -> [hd]
+      else []
+    ) |> Array.to_list |> List.concat
   ) |> Array.to_list in
   match contacts with
   | [] -> []
-  | _ -> List.concat contacts |> O.option_map id
+  | _ -> List.concat contacts
 
   (* TRANSLATE: エッジ同士における最近接点を取得する *)
-let get_edge_closest_points (axis, _)
-    (body_a : RigidBodyInfo.t) (body_b : RigidBodyInfo.t) (trans_mat : M.t): t list =
-  let shapes = body_a.RI.collidable.Collidable.shapes in
-  let open Candyvec.Std.Matrix.Open in
+let get_edge_closest_points (axis, _) body_a body_b trans_mat  =
+  let module RI = Realcaml_rigid_body in
+  let module RBI = RI.Rigid_body_info in
+  let shapes = body_a.RBI.collidable.RI.Collidable.shapes in
   let world_b =
-    let world_a = RI.get_world_transform body_a in
-    RI.get_world_transform body_b *|> MU.force_inverse world_a *|> trans_mat in
+    let world_a = RBI.get_world_transform body_a in
+    let world_b = RBI.get_world_transform body_b in
+    let world_a_inv = match M.inverse world_a with
+      | Some m -> m
+      | None -> failwith "No have inverse matrix" in
+    let open M.Open in
+    world_b *: world_a_inv *: trans_mat in
 
-  let transform_mesh mat = flip Mesh.transform_vertices mat in
   let edge_to_segment vertices edge =
     let (a, b) = edge.Mesh.Edge.vertex_ids in
-    Candyvec.Segment.make vertices.(a) vertices.(b)
+    (vertices.(a), vertices.(b))
   in
 
-  let module O = Sugarpot.Std.Option in
     (* TRANSLATE: それぞれのメッシュについて、offsetを反映させた上で、処理の判定を行う *)
-  let contacts = Array.to_list |< Array.map (fun shape ->
-    let mesh = shape.Shape.mesh in
-    let points = Array.to_list |< Array.map (fun edge_a ->
+  let contacts = Array.map shapes ~f:(fun shape ->
+    let mesh = shape.RI.Shape.mesh in
+    let points = Array.map mesh.Mesh.Mesh.edges ~f:(fun edge_a ->
         (* TRANSLATE: Body Bの各shapeにおけるそれぞれの頂点について処理をする *)
-      let points = Array.to_list |< Array.map (fun shape_b ->
-        let mesh_b = transform_mesh world_b shape_b.Shape.mesh in
-        let points = Array.to_list |< Array.map (fun edge_b ->
-          let edge_a = edge_to_segment shape.Shape.mesh.Mesh.vertices edge_a
-          and edge_b = edge_to_segment mesh_b.Mesh.vertices edge_b in
-          let e1, e2 = Candyvec.Segment.closest edge_a edge_b in
+      let points = Array.map body_b.RBI.collidable.RI.Collidable.shapes ~f:(fun shape_b ->
+        let mesh_b = shape_b.RI.Shape.mesh in
+        let vertices = convert_vertices world_b mesh_b in
+        let points = Array.map mesh_b.Mesh.Mesh.edges ~f:(fun edge_b ->
+          let edge_a = edge_to_segment shape.RI.Shape.mesh.Mesh.Mesh.vertices edge_a
+          and edge_b = edge_to_segment vertices edge_b in
+          let module L = Typedvec.Std.Algebra.Line in
+          let e1, e2 = match L.nearest_point ~a:edge_a ~b:edge_b () with
+            | L.Collide s -> s
+            | L.Nearest s -> s
+            | L.Parallel -> failwith "edges are parallel" in
           { normal = axis;
             point_a = e1;
             point_b = e2;
             depth = V.sub e1 e2 |> V.norm}
-        ) mesh_b.Mesh.edges in
+        ) |> Array.to_list in
 
-        match points with
-        | [] -> None
-        | _ -> Some (sort_points points |> List.hd)
+        match sort_points points with
+        | [] -> []
+        | hd :: _ -> [hd]
 
-      ) body_b.RI.collidable.Collidable.shapes in
-      match O.option_map id points with
-      | [] -> None
-      | points -> Some (sort_points points |> List.hd)
-    ) mesh.Mesh.edges in
-    match O.option_map id points with
-    | [] -> None
-    | points -> Some (sort_points points |> List.hd)
-  ) shapes in
-  O.option_map id contacts
+      ) |> Array.to_list in
+      match List.concat points |> sort_points with
+      | [] -> []
+      | hd :: _ -> [hd]
+    ) |> Array.to_list in
+    match List.concat points |> sort_points with
+    | [] -> []
+    | hd :: _ -> [hd]
+  ) |> Array.to_list in
+  List.concat contacts
 
 let get_inverse_translation axis dist =
-  M.translation (V.invert |< V.scale ~v:axis ~scale:(dist *. 1.1))
+  let module A = Typedvec.Ext.Affine in
+  let axis = U.Vec.to_four axis in
+  V.scalar ~scale:(dist *. 1.1) axis |> V.inverse |> A.translation 
 
 let get_reverse_translation axis dist =
-  M.translation (V.scale ~v:axis ~scale:(dist *. 1.1))
+  let module A = Typedvec.Ext.Affine in
+  let axis = U.Vec.to_four axis in
+  V.scalar ~scale:(dist *. 1.1) axis |> A.translation
 
 (* TRANSLATE: 二つのbodyにおける最近接点を取得する。 *)
-let get_closest_point (axis, dist) body_a body_b =
+let get_closest_point ~axis ~dist body_a body_b =
   let offset_mat = get_inverse_translation axis dist in
   let reverse_mat = get_reverse_translation axis dist in
-  let a_plane_base_closests = Base.get_plane_closest_points (axis, dist) body_a body_b offset_mat in
-  let b_plane_base_closests = Base.get_plane_closest_points (axis, dist) body_b body_a offset_mat in
-  let edge_base_closests = Base.get_edge_closest_points (axis, dist) body_a body_b offset_mat in
-  let point = List.concat [edge_base_closests;
+  let a_plane_base_closests = get_plane_closest_points (axis, dist) body_a body_b offset_mat in
+  let b_plane_base_closests = get_plane_closest_points (axis, dist) body_b body_a offset_mat in
+  let edge_base_closests = get_edge_closest_points (axis, dist) body_a body_b offset_mat in
+  let points = List.concat [edge_base_closests;
                            a_plane_base_closests;
-                           b_plane_base_closests] |> Base.sort_points |> List.hd in
-  let open Candyvec.Std.Matrix.Open in
-  let point_b =point.Base.point_b *||> reverse_mat in
-  {point with Base.point_b = point_b; depth =  dist}
-
-include Base
+                           b_plane_base_closests] |> sort_points in
+  match points with
+  | [] -> failwith "Not found closest point"
+  | hd :: _ -> 
+     let open A.Open in
+     let point_b = (U.Vec.to_four hd.point_b) *> reverse_mat |> U.Vec.to_three in
+     {hd with point_b = point_b; depth =  dist}

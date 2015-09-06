@@ -1,5 +1,6 @@
 open Core.Std
 
+module Region = Realcaml_voronoi_region
 module V = Typedvec.Std.Algebra.Vec
 module F = Realcaml_mesh.Facet
 module E = Realcaml_mesh.Edge
@@ -10,7 +11,7 @@ type t = Region.t list
 let projection_point ~base ~normal ~point =
   let open V.Open in
   let subbed = normal *: (point -: base) in
-  let multiplied = V.scalar ~scale:subbed ~v:normal in
+  let multiplied = V.scalar ~scale:subbed normal in
   V.sub point multiplied
 
 let is_contain edge point = V.dot point edge >= 0.0
@@ -74,7 +75,7 @@ let recent_of_region ~point region =
        | `Edge {Region.Edge_region.edge =(e1, e2);normal= enormal; face_normal = snormal} -> 
           let open V.Open in
           let edge = e2 -: e1 in
-          let recent_point = V.scalar ~v:edge ~scale:(edge *: (point -: e1)) in
+          let recent_point = V.scalar edge ~scale:(edge *: (point -: e1)) in
           recent_point
        | `Point {Region.Point_region.base = p; _} -> p
        end

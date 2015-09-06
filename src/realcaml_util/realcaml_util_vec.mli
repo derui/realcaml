@@ -1,8 +1,8 @@
 
-val empty : Realcaml_util_types.vec
+val empty : unit -> Realcaml_util_types.vec
 (* [empty] get the Zero vector for Vector of Three element *)
 
-val four_empty: Realcaml_util_types.four_vec 
+val four_empty: unit -> Realcaml_util_types.four_vec 
 (* [four_empty] get the Zero vector for Vector of Four element *)
 
 val to_three: Realcaml_util_types.four_vec -> Realcaml_util_types.vec 

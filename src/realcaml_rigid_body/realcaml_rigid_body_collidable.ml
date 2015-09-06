@@ -13,8 +13,8 @@ type t = {
 
 let empty = {
   shapes = [||];
-  center = U.Vec.empty;
-  half_size = U.Vec.empty;
+  center = U.Vec.empty ();
+  half_size = U.Vec.empty ();
 }
 
 let compare_vec comparator v1 v2 =
@@ -47,13 +47,13 @@ let build shapes =
   in
 
   let open V.Open in
-  let center = V.scalar ~scale:0.5 ~v:(min_point +: max_point) in
+  let center = V.scalar ~scale:0.5 (min_point +: max_point) in
   let diagonal = min_point -: max_point in
   let x = (V.get ~index:0 diagonal |> Option.value ~default:0.0) *. 0.5
   and y = (V.get ~index:1 diagonal |> Option.value ~default:0.0) *. 0.5
   and z = (V.get ~index:2 diagonal |> Option.value ~default:0.0) *. 0.5 in
 
-  let half_size = U.Vec.empty in
+  let half_size = U.Vec.empty () in
   V.set ~index:0 ~v:x half_size;
   V.set ~index:1 ~v:y half_size;
   V.set ~index:2 ~v:z half_size;

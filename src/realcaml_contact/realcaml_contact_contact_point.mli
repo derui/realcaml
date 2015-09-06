@@ -5,15 +5,13 @@
    @author derui
 *)
 
-module U = Realcaml_util
-
 type t = {
   distance:float;
-  pointA: U.vec;
-  pointB:U.vec;
-  normal:U.vec;
-  constraints: Constraint.t list;
+  pointA: Realcaml_util.vec;
+  pointB:Realcaml_util.vec;
+  normal:Realcaml_util.vec;
+  constraints: Realcaml_contact_constraint.t list;
 }
 
-val empty : t
+val empty : unit -> t
 (** Get empty contact point *)

@@ -16,9 +16,9 @@ type t = {
 }
 
 let empty =
-  {pos = U.Vec.empty; orientation = Q.identity;
-   linear_velocity = U.Vec.empty;
-   angular_velocity = U.Vec.empty;
+  {pos = U.Vec.empty (); orientation = Q.identity;
+   linear_velocity = U.Vec.empty ();
+   angular_velocity = U.Vec.empty ();
    motion_type = Static}
 
 let to_world_transform {pos;orientation;_} = U.to_world_transform pos orientation

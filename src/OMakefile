@@ -48,14 +48,26 @@ OCAMLOPTFLAGS += -g
 # Build an OCaml library
 #
 
+LIBS[] =
+    realcaml_util
+    realcaml_mesh
+    realcaml_rigid_body
+    realcaml_voronoi
+    realcaml_contact
+
 FILES[] = $(removesuffix $(ls *ml))
 #
 MyOCamlPackage($(LIB), $(FILES), $(EMPTY), -linkall, true)
 
 OUTPUT=$(OCamlPackageGeneratedFiles $(LIB), false)
 
-$(OUTPUT): local_lib
+local_lib:
+    foreach(lib => ..., $(LIBS))
+        LIBNAME=$(lib)/$(lib)_lib
+        $(LIBNAME).cma $(LIBNAME).cmxa: $(lib)
+        export
+    export
 
-lib: $(OUTPUT)
+lib: $(OUTPUT) local_lib
 
 .DEFAULT: lib

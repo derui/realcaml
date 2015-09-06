@@ -6,20 +6,18 @@
    @author derui
 *)
 
-module R = Realcaml_rigid_body
-
 type t = {
   (** Number of the having contact points *)
   contact_num:int;
   (** friction per contained contact points  *)
   friction:float;
   (** contact points of this *)
-  contact_points:Contact_point.t list;
+  contact_points:Realcaml_contact_contact_point.t list;
 }
 
 (** Get empty contact. *)
 val empty: t
 
 (** Get new contact structure updated with two bodies and a new closest point *)
-val update_contact_points : body_a:R.Rigid_body_info.t -> body_b:R.Rigid_body_info.t ->
-  closest:ClosestPoint.t -> t -> t
+val update_contact_points : body_a:Realcaml_rigid_body.Rigid_body_info.t -> body_b:Realcaml_rigid_body.Rigid_body_info.t ->
+  closest:Realcaml_contact_closest_point.t -> t -> t
