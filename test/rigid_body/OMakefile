@@ -72,7 +72,8 @@ BYTE_ENABLED = true
 #
 # Various options
 #
-OCAMLFLAGS    += -annot -bin-annot -g -thread
+OCAMLFLAGS    += -bin-annot -g -thread
+OCAML_LIBS += ../../src/realcaml
 # OCAMLCFLAGS   +=
 # OCAMLOPTFLAGS +=
 # OCAML_LINK_FLAGS +=

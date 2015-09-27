@@ -73,6 +73,7 @@ BYTE_ENABLED = true
 # Various options
 #
 OCAMLFLAGS    += -annot -bin-annot -g -thread
+OCAML_LIBS += ../../src/realcaml
 # OCAMLCFLAGS   +=
 # OCAMLOPTFLAGS +=
 # OCAML_LINK_FLAGS +=
@@ -87,8 +88,8 @@ PROGRAM=mesh_test
 
 TARGET = $(OCamlProgram $(PROGRAM), $(removesuffix .ml, $(ls *.ml)))
 
-.DEFAULT: all $(TARGET) 
+.DEFAULT: all $(TARGET)
 
-test: all $(TARGET)
+test: $(TARGET)
 	./$(PROGRAM)
 

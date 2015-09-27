@@ -18,4 +18,4 @@ type t = {
     face is.
 *)
 val convert: vertices:Realcaml_mesh_types.vertex array ->
-  faces:Realcaml_mesh_facet.vertex_ids array -> t
+  faces:Realcaml_mesh_facet.vertex_ids array -> unit -> t

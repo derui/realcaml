@@ -46,8 +46,6 @@ USE_OCAMLFIND = true
 OCAMLPACKS[] =
     oUnit
     num
-    candyvec
-    sugarpot
 #    pack1
 #    pack2
 #
@@ -89,19 +87,5 @@ FILES[] = $(removesuffix $(ls *ml))
 #    file2
 #
 
-TARGET = $(OCamlProgram realcamel_tests, $(removesuffix .ml, $(ls *.ml)))
+.DEFAULT: all
 
-.DEFAULT: all $(TARGET) 
-
-test: all $(TARGET)
-	./realcamel_tests
-
-clean:
-	rm -f $(TARGET)
-	rm -f *.annot
-	rm -f *.cmx
-	rm -f *.cmt
-	rm -f *.cmo
-	rm -f *.cmi
-	rm -f *.cmt
-	rm -f *.o

@@ -48,7 +48,7 @@ let make_edge_map edges =
       | _ -> m
     )
 
-let convert ~vertices ~faces =
+let convert ~vertices ~faces () =
   (* TODO 縮退面を事前に削除する。 *)
   let faces = Array.filter faces ~f:(fun e ->
       let (ea, eb, ec) = Facet.edges_of_face e in

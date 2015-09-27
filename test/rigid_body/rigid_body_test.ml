@@ -1,9 +1,10 @@
-open Realcaml_mesh
-module R = Realcaml_rigid_body
-module V = Typedvec.Algebra.Vec
-module M = Typedvec.Algebra.Mat
+open Core.Std
+module R = Realcaml.Std.Rigid_body
+module V = Typedvec.Std.Algebra.Vec
+module M = Typedvec.Std.Algebra.Mat
 module S = Typedvec.Size
-module Q = Typedvec.Std.Ext.Qua
+module Q = Typedvec.Ext.Qua
+module U = Realcaml.Std.Util
 
 let to_vert ~x ~y ~z () =
   let v = V.make S.three 0.0 in
@@ -26,8 +27,9 @@ let faces =
   |]
 
 let%spec "Shape can make matrix to transform for offset the mesh" =
-  let mesh = Mesh.convert ~vertices ~faces in
-  let offset_pos = R.Util.Vec.empty in
+  let module M = Realcaml.Std.Mesh in
+  let mesh = M.Mesh.convert ~vertices ~faces () in
+  let offset_pos = U.Vec.empty in
   let orientation = Q.identity in
   let shape = {R.Shape.mesh;offset_pos;offset_orientation = orientation} in
   let trans = R.Shape.offset_transform shape in

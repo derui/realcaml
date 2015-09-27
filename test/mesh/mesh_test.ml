@@ -1,6 +1,6 @@
-open Realcaml_mesh
-module V = Typedvec.Algebra.Vec
-module S = Typedvec.Size
+open Realcaml.Std
+module V = Typedvec.Std.Algebra.Vec
+module S = Typedvec.Std.Size
 
 let to_vert ~x ~y ~z () =
   let v = V.make S.three 0.0 in
@@ -23,7 +23,8 @@ let faces =
   |]
 
 let%spec "Mesh can convert vertices and faces to mesh" =
-  let mesh = Mesh.convert ~vertices ~faces in
+  let open Mesh in
+  let mesh = Mesh.convert ~vertices ~faces () in
   let vertices = mesh.Mesh.vertices
   and edges = mesh.Mesh.edges
   and facets = mesh.Mesh.facets in
@@ -34,7 +35,8 @@ let%spec "Mesh can convert vertices and faces to mesh" =
   facet_vertices [@eq (0, 1, 2)]
 
 let%spec "Mesh must have mapping for edge-face relations" =
-  let mesh = Mesh.convert ~vertices ~faces in
+  let open Mesh in
+  let mesh = Mesh.convert ~vertices ~faces () in
   let face = mesh.Mesh.facets.(0) in
   let mapping = mesh.Mesh.edge_facet_map in
   let module M = Edge_facet_map in
@@ -66,7 +68,8 @@ let base_faces =
 ;;
 
 let%spec "Mesh can convert octahedron to mesh" =
-  let mesh = Mesh.convert ~vertices:base_vertices ~faces:base_faces in
+  let open Mesh in
+  let mesh = Mesh.convert ~vertices:base_vertices ~faces:base_faces () in
   let vertices = mesh.Mesh.vertices
   and edges = mesh.Mesh.edges
   and facets = mesh.Mesh.facets in
