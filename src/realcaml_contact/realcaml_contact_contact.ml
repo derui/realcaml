@@ -19,7 +19,7 @@ let calc_next_contact contact next_list =
   if List.length next_list <= 4 then
     {contact with contact_points = next_list; contact_num = List.length next_list }
   else
-      (* TRANSLATE:限度の個数以上になる場合、面積が最大になるような衝突点のみ選択する  *)
+    (* TRANSLATE:限度の個数以上になる場合、面積が最大になるような衝突点のみ選択する  *)
     let sorted_list = List.sort next_list ~cmp:(fun cp1 cp2 ->
         compare cp1.ContactPoint.distance cp2.ContactPoint.distance) |> List.rev in
     let max_dist = List.hd_exn sorted_list in
@@ -41,10 +41,10 @@ let calc_next_contact contact next_list =
       List.sort ~cmp:compare [V.cross (a -: c) (b -: d) |> V.norm |> Float.abs;
                               V.cross (a -: b) (d -: c) |> V.norm |> Float.abs;
                               V.cross (a -: d) (b -: c) |> V.norm |> Float.abs;] |> List.hd in
-      (* TRANSLATE: 最大のdistを中心として、残りを組み合わせてチェックする *)
+    (* TRANSLATE: 最大のdistを中心として、残りを組み合わせてチェックする *)
     let ((a, b, c, d), _) =
       List.map combi_points ~f:(fun (b, c, d) -> ((max_dist,b,c,d), calc_space max_dist b c d)) |>
-          List.sort ~cmp:(fun (_, square1) (_, square2) -> compare square1 square2) |> List.hd_exn in
+      List.sort ~cmp:(fun (_, square1) (_, square2) -> compare square1 square2) |> List.hd_exn in
     {contact with contact_num = 4; contact_points = [a;b;c;d]}
 
 let update_contact_points ~body_a ~body_b ~closest contact =
@@ -62,10 +62,10 @@ let update_contact_points ~body_a ~body_b ~closest contact =
   let open A.Open in
   let new_point = ContactPoint.empty () in
   let new_point = {new_point with ContactPoint.distance = closest.ClosestPoint.depth;
-    pointA = point.ClosestPoint.point_a;
-    pointB = (let v = U.Vec.to_four point.ClosestPoint.point_b in
-             v *> world_b |> U.Vec.to_three);
-    normal = closest.ClosestPoint.normal ;
+                                  pointA = point.ClosestPoint.point_a;
+                                  pointB = (let v = U.Vec.to_four point.ClosestPoint.point_b in
+                                            v *> world_b |> U.Vec.to_three);
+                                  normal = closest.ClosestPoint.normal ;
                   } in
   let points_list = new_point :: contact.contact_points in
   calc_next_contact contact points_list

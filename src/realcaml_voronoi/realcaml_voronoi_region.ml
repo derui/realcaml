@@ -65,9 +65,9 @@ let make_point_region (e1, e2, e3) normal point =
   match (make_edge_region e1 normal, make_edge_region e2 normal) with
   | (`Edge {Edge_region.edge = (e11, e12); normal = normal1;_},
      `Edge {Edge_region.edge = (e21, e22); normal = normal2;_}) ->
-     let a = V.sub e12 e11 |> V.normalize
-     and b = V.sub e21 e22 |> V.normalize in
-     `Point (Point_region.make ~base:point ~a ~b ~normal)
+    let a = V.sub e12 e11 |> V.normalize
+    and b = V.sub e21 e22 |> V.normalize in
+    `Point (Point_region.make ~base:point ~a ~b ~normal)
   | _ -> failwith "error"
 
 let make (v1, v2, v3) =

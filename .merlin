@@ -1,5 +1,17 @@
 S src
+S src/realcaml_contact
+S src/realcaml_engine
+S src/realcaml_mesh
+S src/realcaml_rigid_body
+S src/realcaml_util
+S src/realcaml_voronoi
+
 B src
+B src/realcaml_contact
+B src/realcaml_engine
+B src/realcaml_mesh
+B src/realcaml_rigid_body
+B src/realcaml_util
+B src/realcaml_voronoi
 PKG core
 PKG typedvec
-PKG typedvec_ext

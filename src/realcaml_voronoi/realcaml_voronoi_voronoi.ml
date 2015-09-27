@@ -35,50 +35,50 @@ let contain_region_for_point p point =
        a_normal = e1;
        b_normal = e2;
        normal} = p in
-  
+
   let base = point -: base in
   let is_contain edge = is_contain edge base in
   is_contain e1 && is_contain e2
-    
+
 let recent_of_region ~point region =
   let is_contain_shape =
     List.map ~f:Region.to_region_type region |> List.for_all ~f:(function
-    | `Edge({Region.Edge_region.edge = (e1, e2); normal = enormal; face_normal = snormal}) -> 
-       let projected = projection_point ~base:e1 ~normal:snormal ~point in
-       (V.dot projected enormal) < 0.0
-    | _ -> true
-    )
+        | `Edge({Region.Edge_region.edge = (e1, e2); normal = enormal; face_normal = snormal}) -> 
+          let projected = projection_point ~base:e1 ~normal:snormal ~point in
+          (V.dot projected enormal) < 0.0
+        | _ -> true
+      )
   in
   let point_in_shape = 
     List.map region ~f:Region.to_region_type |> List.filter ~f:(function
-    | `Edge _ -> true
-    | _ -> false
-    )
-      |> List.map ~f:(function
+        | `Edge _ -> true
+        | _ -> false
+      )
+    |> List.map ~f:(function
         | `Edge ({Region.Edge_region.edge = (e1, e2); normal = enormal; face_normal = snormal}) -> 
-           projection_point ~base:e1 ~normal:snormal ~point
+          projection_point ~base:e1 ~normal:snormal ~point
         | _ -> failwith "can not calculate projection point on the plane"
       )
-      |> List.hd_exn
+    |> List.hd_exn
   in
 
   if is_contain_shape then point_in_shape
   else
     let types = List.map region ~f:Region.to_region_type in
     let calculated = List.filter types ~f:(function
-      | `Edge t -> contain_region_for_edge t point_in_shape
-      | `Point t -> contain_region_for_point t point_in_shape
-    ) in
+        | `Edge t -> contain_region_for_edge t point_in_shape
+        | `Point t -> contain_region_for_point t point_in_shape
+      ) in
     match calculated with
     | x :: _ ->
-       begin match x with
-       | `Edge {Region.Edge_region.edge =(e1, e2);normal= enormal; face_normal = snormal} -> 
+      begin match x with
+        | `Edge {Region.Edge_region.edge =(e1, e2);normal= enormal; face_normal = snormal} -> 
           let open V.Open in
           let edge = e2 -: e1 in
           let recent_point = V.scalar edge ~scale:(edge *: (point -: e1)) in
           recent_point
-       | `Point {Region.Point_region.base = p; _} -> p
-       end
+        | `Point {Region.Point_region.base = p; _} -> p
+      end
     | _ -> failwith "recent region not found..."
 
 let voronoi_region mesh facet =

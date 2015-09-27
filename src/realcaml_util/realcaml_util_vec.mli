@@ -10,3 +10,6 @@ val to_three: Realcaml_util_types.four_vec -> Realcaml_util_types.vec
 
 val to_four : Realcaml_util_types.vec -> Realcaml_util_types.four_vec
 (* [to_four v] get converted four element vector from [v]. Value of element at four of vector is always [1.0]. *)
+
+val extract_three: Realcaml_util_types.vec -> float * float * float
+(* [extract_three v] get values as x/y/z axis in the [vec]. *)

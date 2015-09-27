@@ -22,5 +22,5 @@ type t = {
 let alloc_edge_id edges =
   let ids = List.range ~start:`inclusive ~stop:`exclusive 0 (Array.length edges) in
   Array.to_list edges |> List.zip_exn ids |> List.map ~f:(fun (edge_id, vertex_ids) ->
-    {edge_type = Convex; edge_id; vertex_ids}
-  ) |> Array.of_list
+      {edge_type = Convex; edge_id; vertex_ids}
+    ) |> Array.of_list
