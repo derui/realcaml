@@ -25,3 +25,5 @@ let to_four v =
   z
 
 let extract_three v = (A.Vec.unsafe_get v 0, A.Vec.unsafe_get v 1, A.Vec.unsafe_get v 2)
+
+let with_four v ~f = to_four v |> f |> to_three

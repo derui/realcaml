@@ -26,7 +26,7 @@ let vec_to_translated v world =
   let open M.Open in
   let module AF = Typedvec.Ext.Affine in
   let module V = A.Vec in
-  let trans = (AF.translation (U.Vec.to_four v)) *: world in
+  let trans = (AF.translation_to_mat (U.Vec.to_four v)) *: world in
   U.Vec.four_empty () *> trans |> U.Vec.to_three
 
 let intersect info ind_a ind_b =

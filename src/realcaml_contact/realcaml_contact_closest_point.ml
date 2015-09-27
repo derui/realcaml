@@ -140,12 +140,12 @@ let get_edge_closest_points (axis, _) body_a body_b trans_mat  =
 let get_inverse_translation axis dist =
   let module A = Typedvec.Ext.Affine in
   let axis = U.Vec.to_four axis in
-  V.scalar ~scale:(dist *. 1.1) axis |> V.inverse |> A.translation 
+  V.scalar ~scale:(dist *. 1.1) axis |> V.inverse |> A.translation_to_mat
 
 let get_reverse_translation axis dist =
   let module A = Typedvec.Ext.Affine in
   let axis = U.Vec.to_four axis in
-  V.scalar ~scale:(dist *. 1.1) axis |> A.translation
+  V.scalar ~scale:(dist *. 1.1) axis |> A.translation_to_mat
 
 (* TRANSLATE: 二つのbodyにおける最近接点を取得する。 *)
 let get_closest_point ~axis ~dist body_a body_b =

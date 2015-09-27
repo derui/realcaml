@@ -13,3 +13,6 @@ val to_four : Realcaml_util_types.vec -> Realcaml_util_types.four_vec
 
 val extract_three: Realcaml_util_types.vec -> float * float * float
 (* [extract_three v] get values as x/y/z axis in the [vec]. *)
+
+val with_four: Realcaml_util_types.vec -> f:(Realcaml_util_types.four_vec -> Realcaml_util_types.four_vec) -> Realcaml_util_types.vec
+(* [with_four v ~f] execute [~f] with converted four dimensions vector from [v], and convert three dimension vector from returned [~f]. *)
