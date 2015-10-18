@@ -84,7 +84,7 @@ let calc_velocity s r =
 
 let calc_restriction bodyA bodyB = function
   | Realcaml_contact_pair.New ->
-     let open Realcaml_rigid_body in
+    let open Realcaml_rigid_body in
     let open Rigid_body_info in
     let open Rigid_body in
     0.5 *. (bodyA.body.friction +. bodyB.body.friction)
@@ -172,11 +172,11 @@ module Solver = struct
     let cross = V.cross ct.Constraint.axis r in
     let calc_vec f =
       {solver with
-        Solver_body.accum_impulse = delta;
-        delta_linear_velocity = f solver.Solver_body.delta_linear_velocity
-          (V.scalar ct.Constraint.axis ~scale);
-        delta_angular_velocity = f solver.Solver_body.delta_angular_velocity
-          (U.Vec.to_four cross |> A.mul_m2v inertia |> U.Vec.to_three);
+       Solver_body.accum_impulse = delta;
+       delta_linear_velocity = f solver.Solver_body.delta_linear_velocity
+           (V.scalar ct.Constraint.axis ~scale);
+       delta_angular_velocity = f solver.Solver_body.delta_angular_velocity
+           (U.Vec.to_four cross |> A.mul_m2v inertia |> U.Vec.to_three);
       } in
     match operate with
     | `Add -> calc_vec V.add
@@ -203,22 +203,22 @@ let solve (bodyA, solverA) (bodyB, solverB) contact =
     let open Option in
     let module Constraint = Realcaml_contact_constraint in
     List.hd cp.Contact_point.constraints >>=
-      (fun ctraint ->
-        let delta_impulse = ctraint.Constraint.rhs in
-        let delta_velocity_a = V.add solverA.S.delta_linear_velocity (V.cross solverA.S.delta_angular_velocity rA)
-        and delta_velocity_b = V.add solverB.S.delta_linear_velocity (V.cross solverB.S.delta_angular_velocity rB) in
-        let delta_impulse, accum_impulse_delta =
-          Solver.calc_delta delta_impulse ctraint delta_velocity_a delta_velocity_b in
-        let solverA = Solver.update_solver (delta_impulse, accum_impulse_delta) solverA ctraint rA `Add
-        and solverB = Solver.update_solver (delta_impulse, accum_impulse_delta) solverB ctraint rB `Minus in
-        return (solverA, solverB)) in
+    (fun ctraint ->
+       let delta_impulse = ctraint.Constraint.rhs in
+       let delta_velocity_a = V.add solverA.S.delta_linear_velocity (V.cross solverA.S.delta_angular_velocity rA)
+       and delta_velocity_b = V.add solverB.S.delta_linear_velocity (V.cross solverB.S.delta_angular_velocity rB) in
+       let delta_impulse, accum_impulse_delta =
+         Solver.calc_delta delta_impulse ctraint delta_velocity_a delta_velocity_b in
+       let solverA = Solver.update_solver (delta_impulse, accum_impulse_delta) solverA ctraint rA `Add
+       and solverB = Solver.update_solver (delta_impulse, accum_impulse_delta) solverB ctraint rB `Minus in
+       return (solverA, solverB)) in
 
   let solve_for_contact solverA solverB =
     List.fold_left ~f:(fun solvers cp ->
-      match solvers with
-      | None -> failwith "Not have any constraints, should initialize constraints."
-      | Some (sA, sB) ->
-        solve_per_contact_point sA sB cp) ~init:(Some (solverA, solverB)) in
+        match solvers with
+        | None -> failwith "Not have any constraints, should initialize constraints."
+        | Some (sA, sB) ->
+          solve_per_contact_point sA sB cp) ~init:(Some (solverA, solverB)) in
   let (solverA, solverB) = Option.value_exn (solve_for_contact solverA solverB cps) in
   ((bodyA, solverA), (bodyB, solverB))
 
@@ -236,9 +236,9 @@ let update_constraint contact solver =
     | ctraint1 :: ctraint2 :: ctraint3 :: _ ->
       let max_friction = friction *. (Float.abs ctraint1.Constraint.accum_impulse) in
       {cp with CP.constraints =
-          [ctraint1;
-           new_constraint ctraint1 max_friction;
-           new_constraint ctraint2 max_friction]}
+                 [ctraint1;
+                  new_constraint ctraint1 max_friction;
+                  new_constraint ctraint2 max_friction]}
     | _ -> cp in
   let updated_cps = List.map ~f:update_constraint_for_cp cps in
   {contact with Contact.contact_points = updated_cps}

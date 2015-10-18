@@ -114,10 +114,10 @@ let edge_intersect (shape_a, state_a) (shape_b, state_b) (styp, axis, dist) =
                   let edge_b = (U.Vec.to_four edge_b) *> (world_b *: inverse) |> U.Vec.to_three in
                   let sep_axis = (V.cross edge_b edge_a) |> V.normalize in
                   is_separate_axis ~info_a:(mesh_a, state_a) ~info_b:(mesh_b, state_b) ~sep_axis ()
-              ) >>= (fun (newaxis, newdist) ->
-                (* TRANSLATE: 貫通深度が最も浅い部分を取得する *)
-                if newdist < dist then Some (styp, axis, dist) else Some (Edge, newaxis, newdist)
-              )
+                ) >>= (fun (newaxis, newdist) ->
+                  (* TRANSLATE: 貫通深度が最も浅い部分を取得する *)
+                  if newdist < dist then Some (styp, axis, dist) else Some (Edge, newaxis, newdist)
+                )
             )
         )
       )

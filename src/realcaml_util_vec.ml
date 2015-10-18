@@ -7,14 +7,14 @@ let empty () = A.Vec.zero S.three
 
 let unit = function
   | `X -> let v = empty () in
-          A.Vec.set ~index:0 ~v:1.0 v;
-          v
+    A.Vec.set ~index:0 ~v:1.0 v;
+    v
   | `Y -> let v = empty () in
-          A.Vec.set ~index:1 ~v:1.0 v;
-          v
+    A.Vec.set ~index:1 ~v:1.0 v;
+    v
   | `Z -> let v = empty () in
-          A.Vec.set ~index:2 ~v:1.0 v;
-          v
+    A.Vec.set ~index:2 ~v:1.0 v;
+    v
 
 let four_empty () =
   let z = A.Vec.zero S.four in

@@ -65,9 +65,9 @@ let intersect_bodies engine =
         (* There are not enough contact point to fill contact module now,
            so contact information is not set.
         *)
-         let of_int v = Int32.of_int v |> Option.value ~default:0l in
-         pairs.(!pair_count) <- Pair.make_by_index ~pt:Pair.New ~indexA:(of_int base_count)
-           ~indexB:(of_int other_count) ();
+        let of_int v = Int32.of_int v |> Option.value ~default:0l in
+        pairs.(!pair_count) <- Pair.make_by_index ~pt:Pair.New ~indexA:(of_int base_count)
+            ~indexB:(of_int other_count) ();
         pair_count := succ !pair_count;
         intersect_loop sp pairs base_count (succ other_count) in
   let pairs = intersect_loop sp pairs 0 1 in
@@ -98,9 +98,9 @@ let broad_phase engine =
         newp.(newc) <- {oldp.(oldc) with Pair.pair_type = Pair.Keep};
         matching_loop newp oldp (succ newc) (succ oldc)
       end else if c < 0 then
-          matching_loop newp oldp (succ newc) oldc
-        else
-          matching_loop newp oldp newc (succ oldc) in
+        matching_loop newp oldp (succ newc) oldc
+      else
+        matching_loop newp oldp newc (succ oldc) in
   let pair = matching_loop pair old_pair 0 0 in
   engine.pair.(swap) <- pair;
   engine.pair_swap <- swap;
@@ -116,10 +116,10 @@ let update_contact_points bodies closest pair =
   match (body_a, body_b) with
   | (None, _) | (_, None) -> failwith "body is not found..."
   | (Some(body_a), Some(body_b)) ->
-     {pair with Pair.contact =
-         Contact.update_contact_points (pair.Pair.contact)
-           ~body_a ~body_b ~closest
-     }
+    {pair with Pair.contact =
+                 Contact.update_contact_points (pair.Pair.contact)
+                   ~body_a ~body_b ~closest
+    }
 
 (* do narrow phase *)
 let narrow_phase engine =
@@ -137,40 +137,40 @@ let narrow_phase engine =
     match (body_a, body_b) with
     | (None, _) | (_, None) -> failwith "not found one or two of pair"
     | (Some body_a, Some body_b) ->
-       match is_separate body_a body_b  with
+      match is_separate body_a body_b  with
       (* TRANSLATE: APlaneの場合、body Aを基準として判定する。  *)
-       | Some (Separating_axis.APlane, axis, dist) ->
-         Some(Closest_point.get_closest_point ~axis ~dist body_a body_b)
+      | Some (Separating_axis.APlane, axis, dist) ->
+        Some(Closest_point.get_closest_point ~axis ~dist body_a body_b)
       (* TRANSLATE: BPlaneの場合、body Bを基準として判定する。  *)
-       | Some (Separating_axis.BPlane, axis, dist) ->
-         Some(Closest_point.get_closest_point ~axis ~dist body_b body_a)
+      | Some (Separating_axis.BPlane, axis, dist) ->
+        Some(Closest_point.get_closest_point ~axis ~dist body_b body_a)
       (* TRANSLATE: Edgeの場合、body Aを基準として判定する。  *)
-       | Some (Separating_axis.Edge, axis, dist) ->
-         Some(Closest_point.get_closest_point ~axis ~dist body_a body_b)
+      | Some (Separating_axis.Edge, axis, dist) ->
+        Some(Closest_point.get_closest_point ~axis ~dist body_a body_b)
       (* wTRANSLATE: 分離平面が存在する場合には、このペアに対して何も行わない *)
-       | None -> None
+      | None -> None
   in
 
   let updated_pair = Array.mapi (fun index pair ->
-    match pair.Pair.pair_type with
-    | Pair.Empty -> pair
-    | _ ->
-       match solve_contact_point index pair with
-       | None -> pair
-       | Some closest_point ->
+      match pair.Pair.pair_type with
+      | Pair.Empty -> pair
+      | _ ->
+        match solve_contact_point index pair with
+        | None -> pair
+        | Some closest_point ->
           update_contact_points bodies closest_point pair
-  ) current_pair in
+    ) current_pair in
   engine.pair.(engine.pair_swap) <- updated_pair;
   engine
 
 let map_bodies ~f ~motion ary =
   Array.map (function
-  | None -> None
-  | Some sp ->
-     match motion sp with
-     | State.Active -> Some(f sp)
-     | State.Static -> Some sp
-  ) ary
+      | None -> None
+      | Some sp ->
+        match motion sp with
+        | State.Active -> Some(f sp)
+        | State.Static -> Some sp
+    ) ary
 
 (* do solve constarints *)
 let solve_constraints engine =
@@ -188,41 +188,41 @@ let solve_constraints engine =
     match pair.Pair.pair_type with
     | Pair.Empty -> pair
     | _ ->
-       match (solver_set pair.Pair.indexA, solver_set pair.Pair.indexB) with
-       | ((None, _) | (_, None)) -> pair
-       | (Some(solv_a), Some(solv_b)) ->
-          let new_contact = Solver.setup_constraint solv_a solv_b
+      match (solver_set pair.Pair.indexA, solver_set pair.Pair.indexB) with
+      | ((None, _) | (_, None)) -> pair
+      | (Some(solv_a), Some(solv_b)) ->
+        let new_contact = Solver.setup_constraint solv_a solv_b
             pair.Pair.contact pair.Pair.pair_type {
-              Solver.contact_bias = engine.engine_option.Opt.contact_bias;
-              time_step = engine.engine_option.Opt.time_step
-            } in
-          {pair with Pair.contact = new_contact} in
+            Solver.contact_bias = engine.engine_option.Opt.contact_bias;
+            time_step = engine.engine_option.Opt.time_step
+          } in
+        {pair with Pair.contact = new_contact} in
 
   let do_solve pair =
     match pair.Pair.pair_type with
     | Pair.Empty -> ()
     | _ ->
-       match (solver_set pair.Pair.indexA, solver_set pair.Pair.indexB) with
-       | ((None, _) | (_, None)) -> ()
-       | (Some(solv_a), Some(solv_b)) ->
-          let ((bodyA, solverA), (bodyB, solverB)) = Solver.solve solv_a solv_b pair.Pair.contact in
-          let indA = Option.value_exn (Int32.to_int pair.Pair.indexA)
-          and indB = Option.value_exn (Int32.to_int pair.Pair.indexB) in
-          solver_bodies.(indA) <- Some(bodyA, solverA);
-          solver_bodies.(indB) <- Some(bodyB, solverB) in
+      match (solver_set pair.Pair.indexA, solver_set pair.Pair.indexB) with
+      | ((None, _) | (_, None)) -> ()
+      | (Some(solv_a), Some(solv_b)) ->
+        let ((bodyA, solverA), (bodyB, solverB)) = Solver.solve solv_a solv_b pair.Pair.contact in
+        let indA = Option.value_exn (Int32.to_int pair.Pair.indexA)
+        and indB = Option.value_exn (Int32.to_int pair.Pair.indexB) in
+        solver_bodies.(indA) <- Some(bodyA, solverA);
+        solver_bodies.(indB) <- Some(bodyB, solverB) in
 
   let update_velocity body =
     match body with
     | None -> None
     | Some(body,  solver) ->
-       let state = body.RI.state in
-       let module S = Solver.Solver_body in
-       let linear = V.add state.State.linear_velocity solver.S.delta_linear_velocity
-       and angular = V.add state.State.angular_velocity solver.S.delta_angular_velocity in
-       let state =
-         {state with State.linear_velocity = linear;
-           angular_velocity = angular} in
-       Some({body with RI.state = state}) in
+      let state = body.RI.state in
+      let module S = Solver.Solver_body in
+      let linear = V.add state.State.linear_velocity solver.S.delta_linear_velocity
+      and angular = V.add state.State.angular_velocity solver.S.delta_angular_velocity in
+      let state =
+        {state with State.linear_velocity = linear;
+                    angular_velocity = angular} in
+      Some({body with RI.state = state}) in
 
   (* TRANSLATE 各pairについて、拘束のセットアップを行う *)
   let current_pair = Array.map update_contact current_pair in
@@ -259,7 +259,7 @@ let update_bodies engine =
     {ri with RI.state = state} in
 
   {engine with sweep_prune = {
-    engine.sweep_prune with Sweep_prune.bodies = map_bodies ~f:update_state_position ~motion:(fun sp ->
+       engine.sweep_prune with Sweep_prune.bodies = map_bodies ~f:update_state_position ~motion:(fun sp ->
       sp.RI.state.State.motion_type
     ) bodies}
   }
@@ -269,23 +269,23 @@ let apply_gravity engine =
   let bodies = engine.sweep_prune.Sweep_prune.bodies in
   let updated =
     Array.map (fun body ->
-      match body with
-      | None -> None
-      | Some body ->
-         if State.is_active body.RI.state then
-           let mass = body.RI.body.RB.mass in
-           let gravity = engine.engine_option.Opt.gravity
-           and time_step = engine.engine_option.Opt.time_step in
-           let force = V.scalar gravity ~scale:mass in
-           let ri_body, state = Force.apply_force ~body:body.RI.body ~state:body.RI.state
-             ~force ~torque:(U.Vec.empty ()) ~time_step () in
-           Some ({body with RI.state = state; RI.body = ri_body})
-         else
-           Some body
-    ) bodies in
+        match body with
+        | None -> None
+        | Some body ->
+          if State.is_active body.RI.state then
+            let mass = body.RI.body.RB.mass in
+            let gravity = engine.engine_option.Opt.gravity
+            and time_step = engine.engine_option.Opt.time_step in
+            let force = V.scalar gravity ~scale:mass in
+            let ri_body, state = Force.apply_force ~body:body.RI.body ~state:body.RI.state
+                ~force ~torque:(U.Vec.empty ()) ~time_step () in
+            Some ({body with RI.state = state; RI.body = ri_body})
+          else
+            Some body
+      ) bodies in
   {engine with sweep_prune = {
-    engine.sweep_prune with Sweep_prune.bodies = updated;
-   }
+       engine.sweep_prune with Sweep_prune.bodies = updated;
+     }
   }
 
 let execute_pipeline engine =
