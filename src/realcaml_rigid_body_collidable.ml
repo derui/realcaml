@@ -4,17 +4,16 @@ module A = Typedvec.Std.Algebra
 module S = Typedvec.Std.Size
 module V = Typedvec.Std.Algebra.Vec
 module Shape = Realcaml_rigid_body_shape
+module AABB = Realcaml_rigid_body_AABB
 
 type t = {
   shapes:Shape.t array;
-  center:U.vec;
-  half_size:U.vec;
+  aabb: AABB.t;
 }
 
 let empty = {
   shapes = [||];
-  center = U.Vec.empty ();
-  half_size = U.Vec.empty ();
+  aabb = AABB.empty ();
 }
 
 let compare_vec comparator v1 v2 =
@@ -57,7 +56,7 @@ let build shapes =
   V.set ~index:0 ~v:x half_size;
   V.set ~index:1 ~v:y half_size;
   V.set ~index:2 ~v:z half_size;
-  {shapes; center; half_size;}
+  {shapes; aabb = AABB.make ~center ~half_size ();}
 
 let rebuild collidable = build collidable.shapes
 

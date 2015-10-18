@@ -11,10 +11,8 @@
 type t = {
   (** The shapes in given collidable container.  *)
   shapes: Realcaml_rigid_body_shape.t array;
-  (** Center of the AABB *)
-  center: Realcaml_util.vec;
-  (** The half size of the AABB from center of it.  *)
-  half_size: Realcaml_util.vec;
+  (** AABB Box *)
+  aabb: Realcaml_rigid_body_AABB.t;
 }
 
 (** Get empty collidable. *)

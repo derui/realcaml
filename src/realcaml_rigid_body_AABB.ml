@@ -1,10 +1,21 @@
+open Core.Std
 (** A `AABB` type.  *)
 module A = Typedvec.Std.Algebra
 module V = A.Vec
+module U = Realcaml_util
 
 type t = {
   center: Realcaml_util_types.vec;
   half_size: Realcaml_util_types.vec;
+}
+
+let empty () = {
+  center = U.Vec.empty ();
+  half_size = U.Vec.empty ();
+}
+
+let make ~center ~half_size () = {
+  center; half_size
 }
 
 let intersect_one_axis ~pos_a ~len_a ~pos_b ~len_b () =
@@ -25,7 +36,12 @@ let intersect box_a box_b =
     and b_len = V.unsafe_get box_b.half_size index in
     intersect_one_axis a_p a_len b_p b_len ()
   in
-  let x_sect = intersect_axis 0
-  and y_sect = intersect_axis 1
-  and z_sect = intersect_axis 2 in
-  x_sect && y_sect && z_sect
+  let open Lazy in
+  (* それぞれをLazyにすることで、必要最小限のチェックで行える *)
+  from_fun (fun () -> intersect_axis 0) >>= (function
+  | false -> return false
+  | true -> return (intersect_axis 1)
+  ) >>= (function
+  | false -> return false
+  | true -> return (intersect_axis 2)
+  ) |> force

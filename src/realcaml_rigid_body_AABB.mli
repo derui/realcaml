@@ -14,6 +14,12 @@ type t = {
   half_size: Realcaml_util_types.vec;
 }
 
+val empty: unit -> t
+(* [empty ()] return a empty AABB type *)
+
+val make: center:Realcaml_util_types.vec -> half_size:Realcaml_util_types.vec -> unit -> t
+(* [make ~center ~half_size ()] get a AABB box having [center] and [half_size]. *)
+
 (** Check intersection each AABB.  *)
 val intersect: t -> t -> bool
 

@@ -1,3 +1,3 @@
 module Force         = Realcaml_engine_force
 module Sweep_prune = Realcaml_engine_sweep_prune
-module AABB = Realcaml_engine_AABB
+module Core = Realcaml_engine_core
