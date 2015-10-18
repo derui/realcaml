@@ -33,7 +33,6 @@ let vertex_of_edge vertices (ai, bi) = (vertices.(ai), vertices.(bi))
 let unique_edges faces =
   Array.concat_map faces ~f:(fun (a, b, c) -> [|a;b;c|])
 
-
 let find_edge edges vert =
   match M.find edges vert with
   | None -> M.find edges (Tuple2.swap vert)

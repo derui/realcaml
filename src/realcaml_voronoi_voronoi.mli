@@ -6,8 +6,8 @@
    @version 0.1
 *)
 
-(** type of a voronoi region *)
 type t
+(** type of a voronoi region *)
 
 val voronoi_region :Realcaml_mesh.Mesh.t -> int -> t
 (** Calculate voronoi regions with vertices of a some shape.

@@ -6,27 +6,14 @@
 *)
 
 (** type of a voronoi region *)
-module Edge_region : sig
-  (* TRANSLATE: エッジの始点と終点、エッジの法線ベクトル、面の法線ベクトル *)
-  type t = {
-    edge: Realcaml_util.vec * Realcaml_util.vec;
-    normal: Realcaml_util.vec;
-    face_normal: Realcaml_util.vec;
-  }
-end
+module Edge_region = Realcaml_voronoi_edge_region
 
-module Point_region : sig
-  (* TRANSLATE: 基準となる点と、点から伸びるエッジそれぞれの法線ベクトル、面の法線ベクトル *)
-  type t = {
-    base: Realcaml_util.vec;
-    a_normal: Realcaml_util.vec;
-    b_normal: Realcaml_util.vec;
-    normal: Realcaml_util.vec;
-  }
-end
+module Point_region = Realcaml_voronoi_point_region
 
-type region_type = [ `Edge of Edge_region.t | `Point of Point_region.t]
+type region_type = [ `Edge of Edge_region.Region.t | `Point of Point_region.Region.t]
+
 type t
+(* The type of voronoi region *)
 
 type triangle = Realcaml_util.vec * Realcaml_util.vec * Realcaml_util.vec
 (* The type of triangle. *)
