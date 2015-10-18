@@ -1,5 +1,5 @@
 open Core.Std
-module C = Realcaml_contact.Contact
+module C = Realcaml_contact_contact
 
 type pair = New | Keep | Empty
 

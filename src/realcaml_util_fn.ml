@@ -8,6 +8,6 @@ let to_world_transform pos orientation =
   let module M = A.Mat in
   let module V = A.Vec in
   let module AF = Typedvec.Ext.Affine in
-  let orient = Q.to_mat orientation
-  and trans = Realcaml_util_vec.to_four pos |> AF.translation_to_mat in
-  trans *: orient
+  let af = AF.make S.three in
+  let orient = Q.to_mat orientation in
+  AF.rotate af ~rotate:orient |> AF.translate ~vec:pos |> AF.to_mat 

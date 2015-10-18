@@ -1,6 +1,7 @@
 open Core.Std
 
 module A = Typedvec.Std.Algebra
+module S = Typedvec.Std.Size
 module R = Realcaml_rigid_body.Rigid_body_info
 module V = A.Vec
 module M = A.Mat
@@ -29,9 +30,11 @@ let detect_separation sep_axis (amax, amin) (bmax, bmin) =
   else Some (sep_axis, d1)
 
 (* TRANSLATE: AとBの間に、sep_axisを分離軸として分離平面が存在するかどうかを調べる *)
-let is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_axis () =
+let is_separate_axis ~info_a:(mesh_a, state_a) ~info_b:(mesh_b, state_b) ~sep_axis () =
   let open Option in
-  M.inverse world_b >>= (fun inversed ->
+  let module State = Realcaml_rigid_body.State in
+  let world_a = State.to_world_transform state_a in
+  State.to_world_transform state_b |> M.inverse >>= (fun inversed ->
       let open M.Open in
       let open A.Open in
       (* TRANSLATE: Aのローカル座標系からBのローカル座標形への変換行列 *)
@@ -39,7 +42,7 @@ let is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_ax
       let sep_axisb = (U.Vec.to_four sep_axis) *> trans_a2b |> U.Vec.to_three |> V.normalize in
       M.inverse world_a >>= (fun inversed ->
           let module AF = Typedvec.Ext.Affine in
-          let offset_on_a = AF.translation_of_mat world_b *> inversed |> U.Vec.to_three in
+          let offset_on_a = U.Vec.with_four ~f:(fun p -> p *> inversed) state_b.State.pos in
 
           (* TRANSLATE: shape_bをAのローカル座標系に変換すると、演算負荷が高いため、
              分離軸をBのローカル座標として扱い、取得した値をAのローカル座標系に
@@ -55,7 +58,8 @@ let is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_ax
     )
 
 (* TRANSLATE: 各面法線を分離軸として判定する *)
-let face_intersect (shape_a, world_a) (shape_b, world_b) sep septype =
+let face_intersect (shape_a, state_a) (shape_b, state_b) sep septype =
+  let module State = Realcaml_rigid_body_state in
   let module Shape = Realcaml_rigid_body.Shape in
   let module Mesh = Realcaml_mesh.Mesh in
   let module Facet = Realcaml_mesh.Facet in
@@ -69,7 +73,7 @@ let face_intersect (shape_a, world_a) (shape_b, world_b) sep septype =
   let open Option in
   let per_face sep face = sep >>= (fun (styp, axis, dist) ->
       let sep_axis = face.Facet.normal in
-      match is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_axis () with
+      match is_separate_axis ~info_a:(mesh_a, state_a) ~info_b:(mesh_b, state_b) ~sep_axis () with
       | None -> None
       | Some (newaxis, newdist) ->
         if newdist < dist then Some (styp, axis, dist) else Some (septype, newaxis, newdist)
@@ -77,7 +81,7 @@ let face_intersect (shape_a, world_a) (shape_b, world_b) sep septype =
   Array.fold faces ~f:per_face ~init:(Some(sep))
 
 (* TRANSLATE: 各エッジ同士の外積を分離軸として判定する。 *)
-let edge_intersect (shape_a, world_a) (shape_b, world_b) (styp, axis, dist) =
+let edge_intersect (shape_a, state_a) (shape_b, state_b) (styp, axis, dist) =
   let module Shape = Realcaml_rigid_body.Shape in
   let module Mesh = Realcaml_mesh.Mesh in
   let module Facet = Realcaml_mesh.Facet in
@@ -95,6 +99,9 @@ let edge_intersect (shape_a, world_a) (shape_b, world_b) (styp, axis, dist) =
 
   let open Option in
   let open A.Open in
+  let module State = Realcaml_rigid_body_state in
+  let world_a = State.to_world_transform state_a in
+  let world_b = State.to_world_transform state_b in
 
   Array.fold edges_a ~init:(Some(styp, axis, dist)) ~f:(
     fun sep edge -> sep >>= (fun (styp, axis, dist) ->
@@ -102,18 +109,16 @@ let edge_intersect (shape_a, world_a) (shape_b, world_b) (styp, axis, dist) =
         Array.fold edges_b ~init:(Some(styp, axis, dist)) ~f:(
           fun sep edge -> sep >>= (fun (styp, axis, dist) ->
               let edge_b = edge_to_vec edge vertices_b in
-              let separation = M.inverse world_a >>= (fun inverse ->
+              M.inverse world_a >>= (fun inverse ->
                   let open M.Open in
                   let edge_b = (U.Vec.to_four edge_b) *> (world_b *: inverse) |> U.Vec.to_three in
                   let sep_axis = (V.cross edge_b edge_a) |> V.normalize in
-                  is_separate_axis ~info_a:(mesh_a, world_a) ~info_b:(mesh_b, world_b) ~sep_axis ()
-                ) in
-              match separation with
-              | None -> None
-              | Some (newaxis, newdist) ->
+                  is_separate_axis ~info_a:(mesh_a, state_a) ~info_b:(mesh_b, state_b) ~sep_axis ()
+              ) >>= (fun (newaxis, newdist) ->
                 (* TRANSLATE: 貫通深度が最も浅い部分を取得する *)
                 if newdist < dist then Some (styp, axis, dist) else Some (Edge, newaxis, newdist)
-            ) 
+              )
+            )
         )
       )
   )
@@ -123,8 +128,7 @@ let to_shape_info body =
   let module S = Realcaml_rigid_body.State in
   let module C = Realcaml_rigid_body.Collidable in
   let state = body.R.state in
-  let world = S.to_world_transform state in
-  (body.R.collidable.C.shapes, world)
+  (body.R.collidable.C.shapes, state)
 
 let judge_intersect ~body_a ~body_b =
   let (shapes_a, world_a) = to_shape_info body_a

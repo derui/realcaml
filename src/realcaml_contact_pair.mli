@@ -11,7 +11,7 @@ type pair = New | Keep | Empty
 type t = {
   pair_type:pair;
   key:int64;
-  contact:Realcaml_contact.Contact.t;
+  contact:Realcaml_contact_contact.t;
   indexA:int32;
   indexB:int32;
 }
@@ -20,8 +20,8 @@ type t = {
     To make pair used two indecies equals given key,
     then indexA is first 32bits and indexB is second.
 *)
-val make_by_key: pt:pair -> key:int64 -> ?contact:Realcaml_contact.Contact.t -> unit -> t
-val make_by_index: pt:pair -> indexA:int32 -> indexB:int32 -> ?contact:Realcaml_contact.Contact.t -> unit -> t
+val make_by_key: pt:pair -> key:int64 -> ?contact:Realcaml_contact_contact.t -> unit -> t
+val make_by_index: pt:pair -> indexA:int32 -> indexB:int32 -> ?contact:Realcaml_contact_contact.t -> unit -> t
 
 (** Get empty pair  *)
 val empty: t

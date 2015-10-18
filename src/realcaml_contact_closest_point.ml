@@ -42,6 +42,7 @@ let get_plane_closest_points (axis, _) body_a body_b trans_mat =
   let shapes = body_a.Rigid_body_info.collidable.Collidable.shapes in
   let world_b =
     let open M.Open in
+    let module AF = Typedvec.Ext.Affine in
     let world_a = Rigid_body_info.get_world_transform body_a in
     let inverted = match M.inverse world_a with
       | Some m -> m
@@ -139,13 +140,15 @@ let get_edge_closest_points (axis, _) body_a body_b trans_mat  =
 
 let get_inverse_translation axis dist =
   let module A = Typedvec.Ext.Affine in
-  let axis = U.Vec.to_four axis in
-  V.scalar ~scale:(dist *. 1.1) axis |> V.inverse |> A.translation_to_mat
+  let af = A.make Typedvec.Std.Size.three in
+  let axis = V.scalar ~scale:(dist *. 1.1) axis |> V.inverse in
+  A.translate af ~vec:axis |> A.to_mat
 
 let get_reverse_translation axis dist =
   let module A = Typedvec.Ext.Affine in
-  let axis = U.Vec.to_four axis in
-  V.scalar ~scale:(dist *. 1.1) axis |> A.translation_to_mat
+  let af = A.make Typedvec.Std.Size.three in
+  let axis = V.scalar ~scale:(dist *. 1.1) axis in
+  A.translate af ~vec:axis |> A.to_mat
 
 (* TRANSLATE: 二つのbodyにおける最近接点を取得する。 *)
 let get_closest_point ~axis ~dist body_a body_b =

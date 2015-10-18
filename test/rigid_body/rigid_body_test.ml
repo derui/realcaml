@@ -27,9 +27,9 @@ let faces =
   |]
 
 let%spec "Shape can make matrix to transform for offset the mesh" =
-  let module M = Realcaml.Std.Mesh in
-  let mesh = M.Mesh.convert ~vertices ~faces () in
-  let offset_pos = U.Vec.empty in
+  let open Realcaml.Std.Mesh in
+  let mesh = Mesh.convert ~vertices ~faces () in
+  let offset_pos = U.Vec.empty () in
   let orientation = Q.identity in
   let shape = {R.Shape.mesh;offset_pos;offset_orientation = orientation} in
   let trans = R.Shape.offset_transform shape in
