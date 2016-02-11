@@ -10,7 +10,10 @@ module Edge_region = Realcaml_voronoi_edge_region
 
 module Point_region = Realcaml_voronoi_point_region
 
-type region_type = [ `Edge of Edge_region.Region.t | `Point of Point_region.Region.t]
+module Plane_region = Realcaml_voronoi_plane_region
+
+type region_type = [ `Edge of Edge_region.Region.t | `Point of Point_region.Region.t |
+    `Plane of Plane_region.Region.t]
 
 type t
 (* The type of voronoi region *)
