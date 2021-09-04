@@ -1,3 +1,4 @@
 (library
  (name realcaml_rigid_body)
+ (public_name realcaml.rigid_body)
  (libraries core typedvec realcaml_util realcaml_mesh))

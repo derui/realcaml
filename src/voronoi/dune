@@ -1,3 +1,4 @@
 (library
  (name realcaml_voronoi)
+ (public_name realcaml.voronoi)
  (libraries core typedvec realcaml_mesh))

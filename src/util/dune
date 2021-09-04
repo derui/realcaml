@@ -1,3 +1,4 @@
 (library
  (name realcaml_util)
+ (public_name realcaml.util)
  (libraries core typedvec))

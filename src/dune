@@ -1,3 +1,4 @@
 (library
  (name realcaml)
+ (public_name realcaml)
  (libraries core realcaml_util realcaml_rigid_body realcaml_contact realcaml_mesh realcaml_engine))

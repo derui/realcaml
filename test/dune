@@ -1,0 +1,3 @@
+(test
+ (name realcaml_test)
+ (libraries core realcaml typedvec alcotest))
