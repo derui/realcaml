@@ -1,0 +1,3 @@
+(library
+ (name realcaml_voronoi)
+ (libraries core typedvec realcaml_mesh))

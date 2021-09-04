@@ -1,49 +1,43 @@
-(**
-   This module provide solver for constraint and helper functions.
+(** This module provide solver for constraint and helper functions.
 
-   @author derui
-   @version 0.1
-*)
+    @author derui
+    @version 0.1 *)
 
-(**
-   Contain for solving constraint between rigid bodies.
-*)
+(** Contain for solving constraint between rigid bodies. *)
 module Solver_body : sig
-
-  (** type of the SolverBody module  *)
   type t = {
-    delta_linear_velocity: Realcaml_util.vec;
-    delta_angular_velocity: Realcaml_util.vec;
-    orientation:Typedvec.Ext.Qua.t;
-    inertia_inv:Realcaml_util.mat;
-    mass_inv:float;
+    delta_linear_velocity : Realcaml_util.Types.vec;
+    delta_angular_velocity : Realcaml_util.Types.vec;
+    orientation : Typedvec.Ext.Qua.t;
+    inertia_inv : Realcaml_util.Types.mat;
+    mass_inv : float;
     accum_impulse : float;
   }
+  (** type of the SolverBody module *)
 
-  (** Get new empty solver body  *)
-  val empty: t
+  val empty : t
+  (** Get new empty solver body *)
 
+  val setup : state:Realcaml_rigid_body.State.t -> body:Realcaml_rigid_body.Rigid_body.t -> unit -> t
   (** Set up new solver body with a state of the rigid body *)
-  val setup : state:Realcaml_rigid_body_state.t -> body:Realcaml_rigid_body_rigid_body.t -> unit -> t
 end
 
 (* Options to setup constraint solver. *)
 type constraint_option = {
-  contact_bias: float;
-  time_step: float;
+  contact_bias : float;
+  time_step : float;
 }
 
-type solver_info = Realcaml_rigid_body_rigid_body_info.t * Solver_body.t
+type solver_info = Realcaml_rigid_body.Rigid_body_info.t * Solver_body.t
 
+val setup_solver_body : Realcaml_rigid_body.Rigid_body_info.t -> solver_info
 (** Create new SolverBody with the rigid body information given *)
-val setup_solver_body : Realcaml_rigid_body_rigid_body_info.t -> solver_info 
 
-(** Setup constraints in contact point for between given solver_info   *)
-val setup_constraint : solver_info -> solver_info -> Realcaml_contact_contact.t ->
-  Realcaml_contact_pair.pair -> constraint_option -> Realcaml_contact_contact.t
+val setup_constraint : solver_info -> solver_info -> Contact.t -> Pair.pair -> constraint_option -> Contact.t
+(** Setup constraints in contact point for between given solver_info *)
 
+val solve : solver_info -> solver_info -> Contact.t -> solver_info * solver_info
 (** Solve constraint power with solver body *)
-val solve : solver_info -> solver_info -> Realcaml_contact_contact.t -> solver_info * solver_info
 
-(** return new Contact that is updated to be updating constraints of given Contact  *)
-val update_constraint : Realcaml_contact_contact.t -> solver_info -> Realcaml_contact_contact.t
+val update_constraint : Contact.t -> solver_info -> Contact.t
+(** return new Contact that is updated to be updating constraints of given Contact *)

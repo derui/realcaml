@@ -1,0 +1,23 @@
+
+opam-version: "2.0"
+version: "0.2.0"
+maintainer: "derutakayu@gmail.com"
+authors: "derui"
+license: "MIT"
+synopsis: "Typed vector and matrix"
+homepage: "https://github.com/derui/typedvec"
+bug-reports: "https://github.com/derui/typedvec"
+dev-repo: "git+https://github.com/derui/typedvec"
+tags: []
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name] {with-test}
+]
+depends: [
+  "dune" { < "3.0.0" & build}
+  "alcotest" { < "2.0.0" & with-test }
+  "ppxlib" { < "0.23.0" & build }
+  "typedvec"
+  "core" {< "0.15.0"}
+]
+available: ["ocaml" >= "4.09.0"]
