@@ -1,0 +1,3 @@
+(library
+ (name realcaml_engine)
+ (libraries core typedvec realcaml_util realcaml_rigid_body realcaml_voronoi))
