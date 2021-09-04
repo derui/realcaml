@@ -1,7 +1,0 @@
-version = "0.1"
-description = "Physics engine implemented in OCaml"
-requires = "num sugarpot candyvec bigarray"
-archive(byte) = "realcaml.cma"
-archive(byte, plugin) = "realcaml.cma"
-archive(native) = "realcaml.cmxa"
-exists_if = "realcaml.cma"
